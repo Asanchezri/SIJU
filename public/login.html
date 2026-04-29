@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIJU - Acceso</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f0f2f5;
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px; 
+            box-sizing: border-box;
+        }
+        .caja-login { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 12px; 
+            width: 100%; 
+            max-width: 420px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            text-align: center; 
+        }
+        
+        h1 { 
+            color: #0056b3;
+            margin-top: 0; 
+            font-size: 2.2em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        .pestanas { display: flex; margin-bottom: 25px; border-bottom: 2px solid #eaeaea; }
+        .pestana { flex: 1; padding: 12px; cursor: pointer; font-weight: 500; color: #666; transition: 0.2s; font-size: 0.95em;}
+        .pestana.activa { color: #0056b3; border-bottom: 3px solid #0056b3; }
+        .pestana:hover:not(.activa) { color: #333; }
+
+        label { display: block; text-align: left; font-weight: 500; margin-top: 15px; color: #444; font-size: 0.9em; margin-bottom: 5px;}
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 6px; 
+            border: 1px solid #ccd0d5; 
+            font-family: inherit; 
+            box-sizing: border-box; 
+            font-size: 15px; 
+            background-color: #fcfcfc;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: #0056b3; }
+        
+        button[type="submit"] { 
+            width: 100%; 
+            padding: 14px; 
+            margin-top: 25px; 
+            border-radius: 6px; 
+            border: none; 
+            font-weight: 600; 
+            cursor: pointer; 
+            font-size: 16px; 
+            color: white; 
+            background: #0056b3; 
+            transition: background 0.2s;
+        }
+        button[type="submit"]:hover { background: #004494; }
+        
+        .error-msg { 
+            color: #c62828; 
+            font-weight: 500; 
+            margin-top: 15px; 
+            display: none; 
+            background: #ffebee; 
+            padding: 12px; 
+            border-radius: 6px;
+            font-size: 0.9em;
+            border: 1px solid #ffcdd2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="caja-login">
+        <h1>🎲 Signa Jugando 🎲</h1>
+        
+        <div class="pestanas">
+            <div class="pestana activa" id="tab-login" onclick="mostrarFormulario('login')">Acceder</div>
+            <div class="pestana" id="tab-registro" onclick="mostrarFormulario('registro')">Registrarse</div>
+        </div>
+
+        <p id="mensaje-error" class="error-msg"></p>
+
+        <form id="form-login">
+            <label>Correo Electrónico:</label>
+            <input type="email" id="login-email" required placeholder="tu@email.com">
+            <label>Contraseña:</label>
+            <input type="password" id="login-password" required>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+
+        <form id="form-registro" style="display: none;">
+            <label>Nombre Completo:</label>
+            <input type="text" id="reg-nombre" placeholder="Nombre Apellido" required>
+            
+            <label>Tipo de Cuenta:</label>
+            <select id="reg-rol">
+                <option value="familia">Familiar / Tutor 🧑‍🧒</option>
+                <option value="docente">Docente / Centro 📚</option>
+            </select>
+
+            <label>Correo Electrónico:</label>
+            <input type="email" id="reg-email" required placeholder="tu@email.com">
+            <label>Contraseña:</label>
+            <input type="password" id="reg-password" required minlength="4">
+            
+            <button type="submit">Crear Cuenta</button>
+        </form>
+    </div>
+
+    <script>
+        function mostrarFormulario(tipo) {
+            document.getElementById('mensaje-error').style.display = 'none';
+            if (tipo === 'login') {
+                document.getElementById('form-login').style.display = 'block';
+                document.getElementById('form-registro').style.display = 'none';
+                document.getElementById('tab-login').classList.add('activa');
+                document.getElementById('tab-registro').classList.remove('activa');
+            } else {
+                document.getElementById('form-login').style.display = 'none';
+                document.getElementById('form-registro').style.display = 'block';
+                document.getElementById('tab-login').classList.remove('activa');
+                document.getElementById('tab-registro').classList.add('activa');
+            }
+        }
+
+        function mostrarError(mensaje) {
+            const errorP = document.getElementById('mensaje-error');
+            errorP.innerText = mensaje;
+            errorP.style.display = 'block';
+        }
+
+        document.getElementById('form-login').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('usuarioSiju', JSON.stringify(data.usuario));
+                    window.location.href = 'seleccion.html';
+                } else {
+                    mostrarError(data.mensaje);
+                }
+            } catch (err) { mostrarError("Error conectando con el servidor."); }
+        });
+
+        document.getElementById('form-registro').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('reg-nombre').value;
+            const rol = document.getElementById('reg-rol').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const res = await fetch('/api/registro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, password, rol })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('usuarioSiju', JSON.stringify(data.usuario));
+                    window.location.href = 'seleccion.html';
+                } else {
+                    mostrarError(data.mensaje);
+                }
+            } catch (err) { mostrarError("Error conectando con el servidor."); }
+        });
+    </script>
+</body>
+</html>

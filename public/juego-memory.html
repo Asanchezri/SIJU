@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIJU - Memory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fffbeb;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .nav-superior {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            max-width: 1000px;
+            margin: 0 auto 20px auto;
+        }
+
+        .btn-accion {
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-weight: 800;
+            font-size: 15px;
+            border: none; 
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .btn-volver { background: #e2e8f0; color: #475569; }
+        .btn-volver:active { transform: scale(0.95); }
+
+        .btn-jugar { background: #f59e0b; color: white; box-shadow: 0 6px 0 #d97706; font-size: 16px;}
+        .btn-jugar:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
+
+        h1 { color: #f59e0b; font-weight: 800; font-size: 2em; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        .instrucciones { color: #64748b; font-size: 1.1em; font-weight: 700; margin-bottom: 20px;}
+
+        #vista-juego { display: block; margin-top: 20px; }
+        #vista-fin { display: none; margin-top: 20px; }
+
+        .tablero-memory {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 700px;
+            margin: 0 auto;
+            perspective: 1000px;
+            padding: 10px;
+        }
+
+        .carta {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+
+        .carta:active { transform: scale(0.95); }
+        .carta.volteada { transform: rotateY(180deg); }
+
+        .cara {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.06);
+            border: 4px solid #e2e8f0;
+            box-sizing: border-box;
+            background: white;
+            padding: 10px;
+        }
+
+        .trasera {
+            background-color: #f59e0b;
+            border-color: #d97706;
+            color: white;
+            font-size: 35px;
+            background-image: url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>');
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .frontal {
+            transform: rotateY(180deg);
+        }
+
+        .frontal img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .sin-media-carta {
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 14px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .acierto .frontal { border-color: #10b981; background: #ecfdf5;}
+
+        .pantalla-fin { animation: aparecer 0.5s ease-out; }
+        @keyframes aparecer {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .tablero-memory { grid-template-columns: repeat(3, 1fr); gap: 10px;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-superior">
+        <a id="link-volver" href="#" class="btn-accion btn-volver">Volver al Mapa</a>
+    </div>
+
+    <h1>
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        Memory
+    </h1>
+    <h2 id="titulo-ronda" style="color: #64748b; margin-top: 0; font-size: 1.1em;">Cargando...</h2>
+    
+    <div id="vista-juego">
+        <p class="instrucciones">¡Empareja la imagen con su signo!</p>
+        <div class="tablero-memory" id="tablero"></div>
+    </div>
+
+    <div id="vista-fin"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const nivelActual = params.get('nivel');
+        const edadAlumno = params.get('edad');
+        const alumnoId = params.get('alumno');
+        const tipoJugador = params.get('tipo') || 'alumno'; 
+        
+        // Variables del sistema de rondas
+        let palabrasPiscina = []; 
+        let palabrasPartida = []; 
+        let cartasArray = [];
+        let primeraCarta = null;
+        let segundaCarta = null;
+        let bloqueado = false;
+        let parejasEncontradas = 0;
+        let rondaActual = 0;
+        const PAREJAS_POR_RONDA = 4; // 4 parejas = 8 cartas por tablero
+
+        document.getElementById('link-volver').href = `index.html?edad=${edadAlumno}&alumno=${alumnoId}&tipo=${tipoJugador}`;
+
+        async function cargarDatos() {
+            try {
+                const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
+                let url = `/diccionario?edad=${edadAlumno}`;
+                if (usuarioLogueado && usuarioLogueado.rol === 'docente') { 
+                    url += `&docente=${usuarioLogueado.id}`; 
+                } else if (alumnoId) {
+                    url += `&alumno=${alumnoId}`;
+                }
+
+                const response = await fetch(url);
+                const todas = await response.json();
+                
+                // Filtro Todoterreno
+                palabrasPiscina = todas.filter(p => {
+                    if (!p.nivel) return nivelActual == 1;
+                    const nStr = p.nivel.toString().toLowerCase().trim();
+                    if (nivelActual == 1) return nStr === '1' || nStr === 'básico' || nStr === 'basico';
+                    if (nivelActual == 2) return nStr === '2' || nStr === 'medio';
+                    if (nivelActual == 3) return nStr === '3' || nStr === 'difícil' || nStr === 'dificil';
+                    return false;
+                });
+
+                if (palabrasPiscina.length < 2) {
+                    document.getElementById('tablero').innerHTML = '<h3 style="color:#64748b;">Necesitas al menos 2 palabras para jugar al Memory.</h3>';
+                    return;
+                }
+
+                // Barajamos toda la piscina
+                palabrasPiscina.sort(() => Math.random() - 0.5);
+                iniciarRonda();
+
+            } catch (e) { console.error(e); }
+        }
+
+        function iniciarRonda() {
+            // Reiniciamos variables del tablero
+            parejasEncontradas = 0;
+            primeraCarta = null;
+            segundaCarta = null;
+            bloqueado = false;
+
+            const inicio = rondaActual * PAREJAS_POR_RONDA;
+            let fin = inicio + PAREJAS_POR_RONDA;
+            
+            // Si en la última ronda quedan menos de 4 palabras, cogemos las que queden (mínimo 2)
+            if (fin > palabrasPiscina.length) fin = palabrasPiscina.length;
+            
+            palabrasPartida = palabrasPiscina.slice(inicio, fin);
+
+            document.getElementById('titulo-ronda').innerText = `Ronda ${rondaActual + 1}`;
+            
+            // --- CREACIÓN DUAL DE CARTAS (CONCEPTO vs SIGNO) ---
+            cartasArray = [];
+            palabrasPartida.forEach(palabra => {
+                // Carta 1: La imagen (Concepto)
+                cartasArray.push({
+                    id_signo: palabra.id,
+                    tipo: 'concepto',
+                    media: palabra.url_imagen || palabra.ruta_concepto,
+                    texto: palabra.palabra
+                });
+                
+                // Carta 2: El GIF (Signo)
+                cartasArray.push({
+                    id_signo: palabra.id,
+                    tipo: 'signo',
+                    media: palabra.url_video || palabra.ruta_signo,
+                    texto: palabra.palabra
+                });
+            });
+
+            // Barajamos las cartas del tablero
+            cartasArray.sort(() => 0.5 - Math.random());
+
+            pintarTablero();
+            
+            document.getElementById('vista-juego').style.display = 'block';
+            document.getElementById('vista-fin').style.display = 'none';
+        }
+
+        function pintarTablero() {
+            const tablero = document.getElementById('tablero');
+            tablero.innerHTML = '';
+
+            // Ajuste automático de columnas si hay menos de 8 cartas (última ronda impar)
+            if (cartasArray.length < 8) {
+                tablero.style.gridTemplateColumns = `repeat(${cartasArray.length / 2 + 1}, 1fr)`;
+            } else {
+                tablero.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            }
+
+            cartasArray.forEach((cartaData, index) => {
+                const carta = document.createElement('div');
+                carta.classList.add('carta');
+                carta.dataset.idSigno = cartaData.id_signo;
+
+                let contenido = cartaData.media 
+                    ? `<img src="${cartaData.media}">` 
+                    : `<div class="sin-media-carta">${cartaData.texto}<br><small>(${cartaData.tipo})</small></div>`;
+
+                carta.innerHTML = `
+                    <div class="cara trasera"></div>
+                    <div class="cara frontal">${contenido}</div>
+                `;
+
+                carta.addEventListener('click', () => voltearCarta(carta));
+                tablero.appendChild(carta);
+            });
+        }
+
+        function voltearCarta(cartaSeleccionada) {
+            if (bloqueado || cartaSeleccionada === primeraCarta || cartaSeleccionada.classList.contains('volteada')) return;
+
+            cartaSeleccionada.classList.add('volteada');
+
+            if (!primeraCarta) {
+                primeraCarta = cartaSeleccionada;
+                return;
+            }
+
+            segundaCarta = cartaSeleccionada;
+            bloqueado = true;
+
+            verificarPareja();
+        }
+
+        function verificarPareja() {
+            let esPareja = primeraCarta.dataset.idSigno === segundaCarta.dataset.idSigno;
+
+            if (esPareja) {
+                primeraCarta.classList.add('acierto');
+                segundaCarta.classList.add('acierto');
+                parejasEncontradas++;
+                
+                guardarProgreso(primeraCarta.dataset.idSigno);
+
+                resetearTurno();
+
+                if (parejasEncontradas === cartasArray.length / 2) {
+                    setTimeout(mostrarFinDeRonda, 1000);
+                }
+            } else {
+                setTimeout(() => {
+                    primeraCarta.classList.remove('volteada');
+                    segundaCarta.classList.remove('volteada');
+                    resetearTurno();
+                }, 1000);
+            }
+        }
+
+        function resetearTurno() {
+            primeraCarta = null;
+            segundaCarta = null;
+            bloqueado = false;
+        }
+
+        function mostrarFinDeRonda() {
+            document.getElementById('vista-juego').style.display = 'none';
+            const vistaFin = document.getElementById('vista-fin');
+            vistaFin.style.display = 'block';
+
+            // Comprobamos si quedan suficientes palabras en la piscina para otra ronda útil (mínimo 2 palabras)
+            const palabrasUsadas = (rondaActual + 1) * PAREJAS_POR_RONDA;
+            const quedanMas = (palabrasPiscina.length - palabrasUsadas) >= 2;
+            
+            const medallaSVG = `<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+
+            if (quedanMas) {
+                vistaFin.innerHTML = `
+                    <div class="pantalla-fin">
+                        ${medallaSVG}
+                        <h2 style="font-size: 38px; color: #f59e0b; margin: 0 0 10px 0;">¡Buena Memoria!</h2>
+                        <p style="font-size: 20px; color: #64748b; font-weight: 600;">Sigue así, quedan más parejas por descubrir.</p>
+                        <button onclick="siguienteRonda()" class="btn-accion btn-jugar" style="display:inline-block; margin-top:25px; padding: 15px 35px;">Siguiente Tablero</button>
+                    </div>
+                `;
+            } else {
+                vistaFin.innerHTML = `
+                    <div class="pantalla-fin">
+                        ${medallaSVG}
+                        <h2 style="font-size: 38px; color: #f59e0b; margin: 0 0 10px 0;">¡Nivel Completado!</h2>
+                        <p style="font-size: 20px; color: #64748b; font-weight: 600;">Tienes memoria fotográfica.</p>
+                        <a href="index.html?edad=${edadAlumno}&alumno=${alumnoId}&tipo=${tipoJugador}" class="btn-accion btn-jugar" style="display:inline-block; margin-top:25px; padding: 15px 35px;">Volver al Mapa</a>
+                        <button onclick="location.reload()" class="btn-accion btn-volver" style="display:inline-block; margin-top:25px; margin-left:15px; padding: 15px 35px;">Jugar Otra Vez</button>
+                    </div>
+                `;
+            }
+        }
+
+        function siguienteRonda() {
+            rondaActual++;
+            iniciarRonda();
+        }
+
+        async function guardarProgreso(idSigno) {
+            if (!alumnoId || !tipoJugador) return;
+            try {
+                await fetch('/api/guardar-progreso', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_jugador: alumnoId, tipo: tipoJugador, id_signo: idSigno })
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>

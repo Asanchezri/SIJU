@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIJU - Mapa de Aventuras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f8ff; 
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        h1 { color: #3b82f6; margin-bottom: 5px; font-size: 2.8em; font-weight: 800; letter-spacing: -1px; }
+        h2 { color: #64748b; margin-top: 0; font-size: 1.2em; font-weight: 700; }
+        
+        .nav-superior {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-nav {
+            text-decoration: none;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 16px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .volver { background: #94a3b8; box-shadow: 0 6px 0 #64748b; }
+        .stats { background: #f59e0b; box-shadow: 0 6px 0 #d97706; }
+        
+        .btn-nav:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
+
+        #mapa-niveles {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .nivel-btn {
+            background-color: white;
+            border: 4px solid transparent;
+            border-radius: 24px;
+            width: 100%;
+            padding: 20px 25px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #1e293b;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-sizing: border-box;
+            text-decoration: none;
+        }
+
+        .nivel-color-1 { border-color: #10b981; box-shadow: 0 8px 0 #10b981; }
+        .nivel-color-2 { border-color: #8b5cf6; box-shadow: 0 8px 0 #8b5cf6; }
+        .nivel-color-3 { border-color: #f59e0b; box-shadow: 0 8px 0 #f59e0b; }
+
+        .nivel-btn:hover { transform: translateY(-4px); }
+        .nivel-btn:active { transform: translateY(8px); box-shadow: 0 0px 0 transparent !important; }
+
+        .icono-nivel { 
+            width: 50px; height: 50px; 
+            border-radius: 15px; 
+            display: flex; align-items: center; justify-content: center;
+            background: #f1f5f9;
+        }
+        
+        .texto-nivel { text-align: left; }
+        .titulo-nivel { font-size: 22px; color: #1e293b; margin-bottom: 4px;}
+        .subtitulo-nivel { font-size: 15px; font-weight: 600; color: #64748b; }
+        .flecha { width: 30px; height: 30px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748b;}
+        
+        #caja-debug { display: none; max-width: 600px; margin: 10px auto; background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 12px; border: 1px solid #f87171; text-align: left; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <div class="nav-superior">
+        <a href="seleccion.html" class="btn-nav volver">Cambiar Perfil</a>
+        <button onclick="irAEstadisticas()" class="btn-nav stats">Mi Progreso</button>
+    </div>
+
+    <h1>Mapa de Aventuras</h1>
+    <h2 id="subtitulo">Avanza por los niveles para descubrir juegos nuevos</h2>
+
+    <div id="caja-debug"></div>
+
+    <div id="mapa-niveles">
+        <p style="font-weight: 700; color: #64748b;">Cargando mapa...</p>
+    </div>
+
+    <script>
+        const usuarioActual = JSON.parse(localStorage.getItem('usuarioSiju'));
+        const parametros = new URLSearchParams(window.location.search);
+        const edadGuardia = parametros.get('edad');
+        const alumnoGuardia = parametros.get('alumno');
+        const tipoJugador = parametros.get('tipo') || 'alumno'; 
+
+        if (!edadGuardia || !alumnoGuardia) {
+            window.location.href = usuarioActual ? 'seleccion.html' : 'login.html';
+        }
+
+        let alumnoIdActual = null;
+        let edadAlumno = null;
+
+        window.onload = function() {
+            edadAlumno = parametros.get('edad');
+            alumnoIdActual = parametros.get('alumno'); 
+
+            if (edadAlumno) {
+                cargarNiveles(edadAlumno);
+            } else {
+                document.getElementById('mapa-niveles').innerHTML = '<h3>⚠️ Error: No se ha detectado la edad.</h3>';
+            }
+        };
+
+        async function cargarNiveles(edad) {
+            try {
+                const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
+                let url = `/diccionario?edad=${edad}`;
+                
+                if (usuarioLogueado && usuarioLogueado.rol === 'docente') {
+                    url += `&docente=${usuarioLogueado.id}`;
+                } else if (alumnoIdActual) {
+                    url += `&alumno=${alumnoIdActual}`;
+                }
+
+                const response = await fetch(url);
+                const palabras = await response.json();
+                
+                const contenedor = document.getElementById('mapa-niveles');
+                contenedor.innerHTML = ''; 
+
+                const iconos = {
+                    1: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
+                    2: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+                    3: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
+                };
+                
+                const TOTAL_NIVELES = 3;
+                let contadorNivelVisual = 0; // Este es el número que el niño verá
+
+                for (let nivel = 1; nivel <= TOTAL_NIVELES; nivel++) {
+                    
+                    const palabrasDelNivel = palabras.filter(p => {
+                        if (!p.nivel) return false;
+                        const nStr = p.nivel.toString().toLowerCase().trim();
+                        if (nivel === 1) return nStr === '1' || nStr === 'básico' || nStr === 'basico';
+                        if (nivel === 2) return nStr === '2' || nStr === 'medio';
+                        if (nivel === 3) return nStr === '3' || nStr === 'difícil' || nStr === 'dificil';
+                        return false;
+                    }).length;
+                    
+                    // Condición para aparecer: Mínimo 2 palabras si es el Memory (Nivel 3), o 3 palabras para los demás
+                    const minimoRequerido = (nivel === 3) ? 2 : 3;
+
+                    if (palabrasDelNivel >= minimoRequerido) {
+                        contadorNivelVisual++; // Sumamos 1 al número visual
+                        
+                        const enlaceNivel = document.createElement('a');
+                        let claseColor = '';
+                        let nombreModo = '';
+                        let archivoJuego = '';
+                        
+                        if(nivel === 1) { claseColor = 'nivel-color-1'; nombreModo = 'Modo Clásico'; archivoJuego = 'juego.html'; }
+                        if(nivel === 2) { claseColor = 'nivel-color-2'; nombreModo = 'El Detective'; archivoJuego = 'juego-detective.html'; }
+                        if(nivel === 3) { claseColor = 'nivel-color-3'; nombreModo = 'Memory'; archivoJuego = 'juego-memory.html'; }
+                        
+                        // Le enviamos a la URL el 'nivel' real de la BD para que cargue los datos correctos
+                        enlaceNivel.href = `${archivoJuego}?nivel=${nivel}&edad=${edadAlumno}&alumno=${alumnoIdActual}&tipo=${tipoJugador}`;
+                        enlaceNivel.className = `nivel-btn ${claseColor}`;
+                        
+                        enlaceNivel.innerHTML = `
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <div class="icono-nivel">${iconos[nivel]}</div>
+                                <div class="texto-nivel">
+                                    <div class="titulo-nivel">NIVEL ${contadorNivelVisual}</div>
+                                    <div class="subtitulo-nivel">${nombreModo} (${palabrasDelNivel} palabras)</div>
+                                </div>
+                            </div>
+                            <div class="flecha">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </div>
+                        `;
+
+                        contenedor.appendChild(enlaceNivel);
+                    }
+                }
+
+                // Mensaje elegante por si la edad no tiene NI UNA palabra
+                if (contadorNivelVisual === 0) {
+                    contenedor.innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border: 2px dashed #cbd5e1; max-width: 400px;">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <h3 style="color: #334155; margin-top:0;">No hay juegos disponibles</h3>
+                            <p style="color: #64748b; font-size: 15px; margin-bottom: 0;">Aún no se han añadido palabras suficientes para la edad de ${edad} años.</p>
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                console.error(error);
+                document.getElementById('mapa-niveles').innerHTML = '❌ Error cargando el mapa';
+            }
+        }
+
+        function irAEstadisticas() {
+            if (alumnoIdActual) window.location.href = `/padres.html?alumno=${alumnoIdActual}&tipo=${tipoJugador}`;
+        }
+    </script>
+</body>
+</html>

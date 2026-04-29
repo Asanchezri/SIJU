@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIJU - Jugando</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafafa; 
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .nav-superior {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            max-width: 1000px;
+            margin: 0 auto 20px auto;
+        }
+
+        .btn-accion {
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 100px; 
+            font-weight: 800;
+            font-size: 15px;
+            border: none; 
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .btn-volver { background: #e2e8f0; color: #475569; }
+        .btn-volver:active { transform: scale(0.95); }
+
+        .btn-jugar { background: #10b981; color: white; box-shadow: 0 6px 0 #059669; font-size: 16px;}
+        .btn-jugar:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
+
+        h1 { color: #3b82f6; font-weight: 800; font-size: 2em; margin-top: 0;}
+        .instrucciones { color: #64748b; font-size: 1.1em; font-weight: 700; margin-bottom: 20px;}
+
+        #vista-estudio { display: block; }
+        
+        #contenedor-tarjetas {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .tarjeta {
+            background: white;
+            border: 4px solid #e2e8f0;
+            border-radius: 20px;
+            width: 260px; 
+            padding: 15px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .tarjeta:hover { transform: translateY(-4px); border-color: #cbd5e1;}
+        
+        .tarjeta-media {
+            display: flex;
+            gap: 10px;
+            height: 110px; 
+            margin-bottom: 12px;
+        }
+
+        .img-estudio {
+            width: 50%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+            background-color: #f1f5f9;
+            padding: 5px;
+            box-sizing: border-box;
+        }
+
+        .sin-media {
+            width: 50%;
+            height: 100%;
+            border-radius: 10px;
+            background-color: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            box-sizing: border-box;
+        }
+
+        .tarjeta-texto { font-weight: 800; font-size: 18px; color: #334155; text-transform: uppercase;}
+
+        #vista-juego { display: none; margin-top: 20px; }
+        #vista-fin { display: none; margin-top: 20px; }
+
+        .pregunta-grande {
+            font-size: 45px;
+            font-weight: 800;
+            color: #ffffff;
+            background: #3b82f6;
+            display: inline-block;
+            padding: 15px 40px;
+            border-radius: 100px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 0 #2563eb;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .opciones-contenedor {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .opcion-juego {
+            width: 170px;
+            height: 170px;
+            border: 5px solid #e2e8f0;
+            border-radius: 24px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.2s;
+            box-shadow: 0 8px 12px rgba(0,0,0,0.05);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .opcion-juego:hover { transform: scale(1.05); border-color: #94a3b8; }
+        
+        .acierto { border-color: #10b981 !important; background: #ecfdf5; transform: scale(1.05); }
+        .fallo { border-color: #ef4444 !important; background: #fef2f2; animation: temblor 0.4s; }
+
+        @keyframes temblor {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+            100% { transform: translateX(0); }
+        }
+
+        .pantalla-fin { animation: aparecer 0.5s ease-out; }
+        @keyframes aparecer {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="nav-superior">
+        <a id="link-volver" href="#" class="btn-accion btn-volver">Volver al Mapa</a>
+        <button id="btn-cambiar-modo" onclick="empezarJuego()" class="btn-accion btn-jugar">▶ ¡A Jugar!</button>
+    </div>
+
+    <h1 id="titulo-nivel">Cargando...</h1>
+
+    <div id="vista-estudio">
+        <p class="instrucciones">Estudia el concepto y su signo antes de empezar</p>
+        <div id="contenedor-tarjetas"></div>
+    </div>
+
+    <div id="vista-juego">
+        <div id="pregunta-actual" class="pregunta-grande">...</div>
+        <p class="instrucciones">¿Cuál es el signo correcto?</p>
+        <div id="contenedor-opciones" class="opciones-contenedor"></div>
+        <br><br>
+        <button onclick="volverAEstudio()" class="btn-accion btn-volver" style="background:#94a3b8; color:white;">Parar y Estudiar</button>
+    </div>
+
+    <div id="vista-fin"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const nivelActual = params.get('nivel');
+        const edadAlumno = params.get('edad');
+        const alumnoId = params.get('alumno');
+        const tipoJugador = params.get('tipo') || 'alumno'; 
+        
+        // Variables del sistema de rondas
+        let palabrasPiscina = []; 
+        let palabrasPartida = []; 
+        let palabrasPendientes = []; 
+        let preguntaActual = null; 
+        let rondaActual = 0;
+        const PALABRAS_POR_RONDA = 3;
+
+        document.getElementById('link-volver').href = `index.html?edad=${edadAlumno}&alumno=${alumnoId}&tipo=${tipoJugador}`;
+
+        async function cargarDatos() {
+            try {
+                const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
+                let url = `/diccionario?edad=${edadAlumno}`;
+                if (usuarioLogueado && usuarioLogueado.rol === 'docente') {
+                    url += `&docente=${usuarioLogueado.id}`;
+                } else if (alumnoId) {
+                    url += `&alumno=${alumnoId}`;
+                }
+
+                const response = await fetch(url);
+                const todas = await response.json();
+                
+                palabrasPiscina = todas.filter(p => {
+                    if (!p.nivel) return nivelActual == 1;
+                    const nStr = p.nivel.toString().toLowerCase().trim();
+                    if (nivelActual == 1) return nStr === '1' || nStr === 'básico' || nStr === 'basico';
+                    if (nivelActual == 2) return nStr === '2' || nStr === 'medio';
+                    if (nivelActual == 3) return nStr === '3' || nStr === 'difícil' || nStr === 'dificil';
+                    return false;
+                });
+
+                if (palabrasPiscina.length === 0) {
+                    document.getElementById('contenedor-tarjetas').innerHTML = '<h3 style="color:#64748b;">Nivel vacío</h3>';
+                    document.getElementById('btn-cambiar-modo').style.display = 'none';
+                    return;
+                }
+
+                // Barajamos toda la piscina de palabras una sola vez al cargar
+                palabrasPiscina.sort(() => Math.random() - 0.5);
+                iniciarRonda();
+
+            } catch (e) { console.error(e); }
+        }
+
+        function iniciarRonda() {
+            const inicio = rondaActual * PALABRAS_POR_RONDA;
+            const fin = inicio + PALABRAS_POR_RONDA;
+            
+            // Extraemos las 3 palabras que tocan en esta ronda
+            palabrasPartida = palabrasPiscina.slice(inicio, fin);
+
+            document.getElementById('titulo-nivel').innerText = `Nivel ${nivelActual} - Ronda ${rondaActual + 1}`;
+            
+            pintarModoEstudio(); 
+            
+            // Reiniciamos las vistas
+            document.getElementById('vista-estudio').style.display = 'block';
+            document.getElementById('vista-juego').style.display = 'none';
+            document.getElementById('vista-fin').style.display = 'none';
+            document.getElementById('btn-cambiar-modo').style.display = 'block';
+        }
+
+        function pintarModoEstudio() {
+            const contenedor = document.getElementById('contenedor-tarjetas');
+            contenedor.innerHTML = '';
+
+            const bordes = {3: '#fcd34d', 4: '#fdba74', 5: '#86efac'};
+            const colorBorde = bordes[edadAlumno] || '#cbd5e1';
+
+            palabrasPartida.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'tarjeta';
+                div.style.borderColor = colorBorde;
+                
+                const urlImg = item.url_imagen || item.ruta_concepto;
+                const urlGif = item.url_video || item.ruta_signo;
+
+                const htmlImg = urlImg ? `<img src="${urlImg}" class="img-estudio" title="Concepto">` : `<div class="sin-media">Sin Imagen</div>`;
+                const htmlGif = urlGif ? `<img src="${urlGif}" class="img-estudio" title="Signo (GIF)">` : `<div class="sin-media">Sin GIF</div>`;
+
+                div.innerHTML = `
+                    <div class="tarjeta-media">
+                        ${htmlImg}
+                        ${htmlGif}
+                    </div>
+                    <div class="tarjeta-texto">${item.palabra}</div>
+                `;
+                contenedor.appendChild(div);
+            });
+        }
+
+        function empezarJuego() {
+            document.getElementById('vista-estudio').style.display = 'none';
+            document.getElementById('vista-juego').style.display = 'block';
+            document.getElementById('btn-cambiar-modo').style.display = 'none'; 
+            
+            palabrasPendientes = [...palabrasPartida]; 
+            generarPregunta();
+        }
+
+        function generarPregunta() {
+            if (palabrasPendientes.length === 0) {
+                mostrarFinDeRonda();
+                return;
+            }
+
+            preguntaActual = palabrasPendientes[Math.floor(Math.random() * palabrasPendientes.length)];
+
+            let opciones = [...palabrasPartida];
+            opciones.sort(() => Math.random() - 0.5);
+
+            document.getElementById('pregunta-actual').innerText = preguntaActual.palabra;
+            const contenedorOps = document.getElementById('contenedor-opciones');
+            contenedorOps.innerHTML = '';
+
+            opciones.forEach(opcion => {
+                const btn = document.createElement('div');
+                btn.className = 'opcion-juego';
+                
+                const mediaAdivinar = opcion.url_video || opcion.ruta_signo || opcion.url_imagen || opcion.ruta_concepto;
+                
+                if (mediaAdivinar) {
+                    btn.innerHTML = `<img src="${mediaAdivinar}" style="width:100%; height:100%; object-fit:contain;">`;
+                } else {
+                    btn.innerHTML = `<div style="color:#94a3b8; font-weight:700;">Sin medio</div>`;
+                }
+                
+                btn.onclick = () => verificarRespuesta(btn, opcion);
+                contenedorOps.appendChild(btn);
+            });
+        }
+
+        async function verificarRespuesta(elementoHTML, opcionElegida) {
+            if(elementoHTML.classList.contains('acierto')) return;
+
+            if (opcionElegida.id === preguntaActual.id) {
+                elementoHTML.classList.add('acierto');
+                guardarProgreso(preguntaActual.id);
+                
+                palabrasPendientes = palabrasPendientes.filter(p => p.id !== preguntaActual.id);
+                
+                setTimeout(() => {
+                    generarPregunta();
+                }, 1000);
+
+            } else {
+                elementoHTML.classList.add('fallo');
+                setTimeout(() => elementoHTML.classList.remove('fallo'), 400);
+            }
+        }
+
+        function mostrarFinDeRonda() {
+            document.getElementById('vista-juego').style.display = 'none';
+            const vistaFin = document.getElementById('vista-fin');
+            vistaFin.style.display = 'block';
+
+            // Comprobamos si quedan más palabras en la piscina para otra ronda
+            const quedanMas = (rondaActual + 1) * PALABRAS_POR_RONDA < palabrasPiscina.length;
+            const medallaSVG = `<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`;
+
+            if (quedanMas) {
+                vistaFin.innerHTML = `
+                    <div class="pantalla-fin">
+                        ${medallaSVG}
+                        <h2 style="font-size: 45px; color: #10b981; margin: 0 0 10px 0;">¡Ronda Superada!</h2>
+                        <p style="font-size: 22px; color: #64748b; font-weight: 600;">Aún quedan más palabras por descubrir.</p>
+                        <button onclick="siguienteRonda()" class="btn-accion btn-jugar" style="display:inline-block; margin-top:30px; font-size:20px; padding: 18px 40px; border-radius: 100px;">Siguiente Ronda</button>
+                    </div>
+                `;
+            } else {
+                vistaFin.innerHTML = `
+                    <div class="pantalla-fin">
+                        ${medallaSVG}
+                        <h2 style="font-size: 45px; color: #10b981; margin: 0 0 10px 0;">¡Nivel Completado!</h2>
+                        <p style="font-size: 22px; color: #64748b; font-weight: 600;">Has dominado todas las palabras de este nivel.</p>
+                        <a href="index.html?edad=${edadAlumno}&alumno=${alumnoId}&tipo=${tipoJugador}" class="btn-accion btn-jugar" style="display:inline-block; margin-top:30px; font-size:20px; padding: 18px 40px; border-radius: 100px;">Volver al Mapa</a>
+                    </div>
+                `;
+            }
+        }
+
+        function siguienteRonda() {
+            rondaActual++;
+            iniciarRonda();
+        }
+
+        function volverAEstudio() {
+            document.getElementById('vista-estudio').style.display = 'block';
+            document.getElementById('vista-juego').style.display = 'none';
+            document.getElementById('btn-cambiar-modo').style.display = 'block';
+        }
+
+        async function guardarProgreso(idSigno) {
+            if (!alumnoId || !tipoJugador) return;
+            try {
+                await fetch('/api/guardar-progreso', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id_jugador: alumnoId, tipo: tipoJugador, id_signo: idSigno })
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        cargarDatos();
+    </script>
+</body>
+</html>

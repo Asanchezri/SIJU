@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIJU - Gestión de Diccionario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f4f6f8; 
+            color: #333; 
+            padding: 40px 20px; 
+            margin: 0;
+        }
+        
+        .contenedor { max-width: 900px; margin: 0 auto; }
+        
+        .btn-volver { 
+            display: inline-block; 
+            padding: 10px 18px; 
+            background: white; 
+            border: 1px solid #ccd0d5; 
+            border-radius: 8px; 
+            color: #444; 
+            text-decoration: none; 
+            font-weight: 500; 
+            margin-bottom: 25px; 
+            transition: 0.2s; 
+            font-size: 15px;
+        }
+        .btn-volver:hover { background: #f0f2f5; color: #111; }
+
+        .caja {
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            border: 1px solid #eaeaea;
+            text-align: left; 
+            margin-bottom: 30px; 
+        }
+
+        h2 { 
+            color: #111; 
+            margin-top: 0; 
+            font-size: 1.4em; 
+            font-weight: 600; 
+            border-bottom: 1px solid #f0f0f0; 
+            padding-bottom: 15px; 
+            margin-bottom: 20px;
+        }
+        
+        label { display: block; margin-top: 15px; font-weight: 500; color: #444; font-size: 14px; margin-bottom: 5px;}
+        
+        input, select { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #ccd0d5; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 15px;
+            background: #fdfdfd;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus { outline: none; border-color: #0056b3; }
+
+        .btn-primario { 
+            width: 100%; 
+            margin-top: 25px; 
+            padding: 14px; 
+            background-color: #0056b3; 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: background 0.2s; 
+        }
+        .btn-primario:hover { background-color: #004494; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px;}
+        th, td { padding: 14px 12px; border-bottom: 1px solid #eaeaea; text-align: left; }
+        th { background-color: #f8f9fa; color: #555; font-weight: 600;}
+        
+        .grupo-botones-tabla { display: flex; gap: 8px; }
+        .btn-tabla {
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .btn-editar { background: #f0f2f5; color: #333; border-color: #ddd; }
+        .btn-editar:hover { background: #e4e6e9; }
+        .btn-borrar { background: white; color: #d32f2f; border-color: #ffcdd2; }
+        .btn-borrar:hover { background: #ffebee; }
+
+        #modal-editar { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-contenido { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);}
+        .btn-cancelar { width: 100%; background: white; color: #555; border: 1px solid #ccc; margin-top: 10px; padding: 14px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s;}
+        .btn-cancelar:hover { background: #f4f6f8; }
+        
+        /* Etiqueta visual para el nivel */
+        .badge-nivel { background: #eef2f5; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <script>
+        const usuarioActual = JSON.parse(localStorage.getItem('usuarioSiju'));
+        if (!usuarioActual || usuarioActual.rol !== 'docente') {
+            alert("Acceso denegado. Se requiere cuenta de docente."); 
+            window.location.href = 'login.html'; 
+        }
+    </script>
+
+    <div class="contenedor">
+        <a href="seleccion.html" class="btn-volver">Volver al Panel Principal</a>
+
+        <div class="caja">
+            <h2>Añadir Nueva Palabra</h2>
+            <form id="form-palabra">
+                <label>Palabra:</label> <input type="text" id="palabra" placeholder="Ej: Manzana" required>
+                
+                <label>Edad Recomendada:</label> 
+                <select id="edad">
+                    <option value="3">3 Años</option>
+                    <option value="4">4 Años</option>
+                    <option value="5">5 Años</option>
+                </select>
+                
+                <label>Nivel de Dificultad:</label> 
+                <select id="nivel" required>
+                    <option value="Básico">Básico</option>
+                    <option value="Medio">Medio</option>
+                    <option value="Difícil">Difícil</option>
+                </select>
+
+                <label>Ruta/URL de la Imagen:</label> <input type="text" id="ruta_concepto" placeholder="/img/conceptos/ejemplo.png" required>
+                <label>Ruta/URL del Vídeo (GIF):</label> <input type="text" id="ruta_signo" placeholder="/img/signos/ejemplo.gif" required>
+                
+                <button type="submit" class="btn-primario">Guardar Palabra</button>
+            </form>
+        </div>
+
+        <div class="caja">
+            <h2>Mis Palabras Creadas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Palabra</th>
+                        <th>Edad</th>
+                        <th>Nivel</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-palabras">
+                    <tr><td colspan="4" style="text-align:center; padding: 30px; color: #666;">Cargando diccionario...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal-editar">
+        <div class="modal-contenido">
+            <h2>Modificar Palabra</h2>
+            <form id="form-editar">
+                <input type="hidden" id="edit-id">
+                <label>Palabra:</label> <input type="text" id="edit-palabra" required>
+                
+                <label>Edad Recomendada:</label> 
+                <select id="edit-edad">
+                    <option value="3">3 Años</option>
+                    <option value="4">4 Años</option>
+                    <option value="5">5 Años</option>
+                </select>
+                
+                <label>Nivel de Dificultad:</label> 
+                <select id="edit-nivel" required>
+                    <option value="Básico">Básico</option>
+                    <option value="Medio">Medio</option>
+                    <option value="Difícil">Difícil</option>
+                </select>
+
+                <label>Ruta/URL de la Imagen:</label> <input type="text" id="edit-concepto" required>
+                <label>Ruta/URL del Vídeo (GIF):</label> <input type="text" id="edit-signo" required>
+                
+                <button type="submit" class="btn-primario">Actualizar Datos</button>
+                <button type="button" class="btn-cancelar" onclick="document.getElementById('modal-editar').style.display='none'">Cancelar</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function cargarMisPalabras() {
+            try {
+                const res = await fetch(`/api/admin/mis-palabras?id_profesor=${usuarioActual.id}`);
+                const palabras = await res.json();
+                const tbody = document.getElementById('tabla-palabras');
+                tbody.innerHTML = '';
+
+                if (palabras.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 30px; color: #666;">Aún no has registrado ninguna palabra.</td></tr>';
+                    return;
+                }
+
+                palabras.forEach(p => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${p.palabra}</strong></td>
+                            <td>${p.edad} años</td>
+                            <td><span class="badge-nivel">${p.nivel}</span></td>
+                            <td>
+                                <div class="grupo-botones-tabla">
+                                    <button class="btn-tabla btn-editar" onclick="abrirModalEditar(${p.id}, '${p.palabra}', ${p.edad}, '${p.nivel}', '${p.ruta_concepto}', '${p.ruta_signo || ''}')">Editar</button>
+                                    <button class="btn-tabla btn-borrar" onclick="borrarPalabra(${p.id})">Eliminar</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) { console.error("Error cargando palabras:", error); }
+        }
+
+        document.getElementById('form-palabra').addEventListener('submit', async (e) => {
+            e.preventDefault(); 
+            const datos = {
+                palabra: document.getElementById('palabra').value,
+                edad: document.getElementById('edad').value,
+                nivel: document.getElementById('nivel').value,
+                ruta_concepto: document.getElementById('ruta_concepto').value,
+                ruta_signo: document.getElementById('ruta_signo').value,
+                id_profesor: usuarioActual.id
+            };
+            
+            try {
+                await fetch('/api/admin/nueva-palabra', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(datos) 
+                });
+                document.getElementById('form-palabra').reset();
+                cargarMisPalabras(); 
+            } catch (error) {
+                alert("Error al guardar la palabra");
+            }
+        });
+
+        async function borrarPalabra(id) {
+            if (confirm("¿Confirmas que deseas eliminar esta palabra?")) {
+                await fetch(`/api/admin/borrar-palabra/${id}`, { method: 'DELETE' });
+                cargarMisPalabras(); 
+            }
+        }
+
+        function abrirModalEditar(id, palabra, edad, nivel, img, vid) {
+            document.getElementById('edit-id').value = id;
+            document.getElementById('edit-palabra').value = palabra;
+            document.getElementById('edit-edad').value = edad;
+            document.getElementById('edit-nivel').value = nivel;
+            document.getElementById('edit-concepto').value = img;
+            document.getElementById('edit-signo').value = vid; 
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        document.getElementById('form-editar').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const datos = {
+                palabra: document.getElementById('edit-palabra').value,
+                edad: document.getElementById('edit-edad').value,
+                nivel: document.getElementById('edit-nivel').value,
+                ruta_concepto: document.getElementById('edit-concepto').value,
+                ruta_signo: document.getElementById('edit-signo').value
+            };
+            
+            try {
+                await fetch(`/api/admin/editar-palabra/${id}`, { 
+                    method: 'PUT', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(datos) 
+                });
+                document.getElementById('modal-editar').style.display = 'none';
+                cargarMisPalabras(); 
+            } catch (error) {
+                alert("Error al actualizar la palabra");
+            }
+        });
+
+        // Inicializamos cargando las palabras
+        cargarMisPalabras();
+    </script>
+</body>
+</html>
