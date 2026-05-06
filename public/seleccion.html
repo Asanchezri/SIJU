@@ -82,6 +82,11 @@
         
         .btn-jugar { border-color: #0056b3; color: #0056b3; background: white;}
         .btn-jugar:hover { background: #0056b3; color: white;}
+
+        .btn-borrar-alumno { background: white; color: #d32f2f; border-color: #ffcdd2; padding: 6px 10px; font-size: 13px;}
+        .btn-borrar-alumno:hover { background: #ffebee; }
+        .btn-editar-alumno { background: #f0f2f5; color: #333; border-color: #ddd; padding: 6px 10px; font-size: 13px;}
+        .btn-editar-alumno:hover { background: #e4e6e9; }
         
         .btn-nav-rojo { background: white; color: #d32f2f; border: 1px solid #ffcdd2; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s;}
         .btn-nav-rojo:hover { background: #ffebee; }
@@ -122,9 +127,6 @@
         th { background-color: #f8f9fa; color: #555; font-weight: 600;}
         .codigo-badge { background: #f0f0f0; color: #333; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 1em; letter-spacing: 1px; border: 1px solid #ddd;}
 
-        /* ========================================== */
-        /* CSS DEL WIDGET DEL ASISTENTE SIJU          */
-        /* ========================================== */
         .chat-fab {
             position: fixed; bottom: 25px; right: 25px;
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
@@ -234,6 +236,7 @@
 
     <div id="lista-perfiles" class="contenedor-perfiles">Cargando datos...</div>
 
+    <!-- MODAL CREAR CLASE -->
     <div id="modal-clase" class="modal">
         <div class="modal-contenido">
             <h2>Crear Clase</h2>
@@ -246,6 +249,7 @@
         </div>
     </div>
 
+    <!-- MODAL MATRICULAR ALUMNO -->
     <div id="modal-alumno" class="modal">
         <div class="modal-contenido">
             <h2 id="titulo-modal-alumno">Registrar Alumno</h2>
@@ -262,6 +266,7 @@
         </div>
     </div>
 
+    <!-- MODAL LISTA ALUMNOS -->
     <div id="modal-lista" class="modal">
         <div class="modal-contenido" style="max-width: 700px;">
             <h2 id="titulo-modal-lista">Listado de Alumnos</h2>
@@ -276,6 +281,26 @@
                 <tbody id="cuerpo-tabla-alumnos"></tbody>
             </table>
             <button type="button" class="btn-cancelar" onclick="cerrarModal('modal-lista')" style="margin-top: 20px !important;">Cerrar Panel</button>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR ALUMNO -->
+    <div id="modal-editar-alumno" class="modal">
+        <div class="modal-contenido">
+            <h2>Editar Alumno</h2>
+            <form id="form-editar-alumno">
+                <input type="hidden" id="edit-alumno-id">
+                <input type="hidden" id="edit-alumno-aula-id">
+                <label>Nombre del alumno:</label>
+                <input type="text" id="edit-alumno-nombre" required>
+                <label>Email del tutor/familia:</label>
+                <input type="email" id="edit-alumno-email" placeholder="email@ejemplo.com">
+                <p style="color:#666; font-size:13px; margin-top:8px; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #eee;">
+                    ℹ️ El email del tutor se usará para enviarle los informes de progreso por correo.
+                </p>
+                <button type="submit" class="btn-accion-modal">Guardar Cambios</button>
+                <button type="button" class="btn-cancelar" onclick="cerrarModal('modal-editar-alumno')">Cancelar</button>
+            </form>
         </div>
     </div>
 
@@ -368,7 +393,7 @@
                     const btnStats = document.createElement('button');
                     btnStats.className = 'btn-card';
                     btnStats.innerText = "Estadísticas";
-                    btnStats.onclick = () => window.location.href = `/padres.html?alumno=${perfil.id}&nombre=${perfil.nombre}&tipo=${tipoJugador}`;
+                    btnStats.onclick = () => window.location.href = `/padres.html?alumno=${perfil.id}&nombre=${encodeURIComponent(perfil.nombre)}&tipo=${tipoJugador}`;
                     body.appendChild(btnStats);
 
                     if (usuarioLogueado.rol === 'docente') {
@@ -383,6 +408,13 @@
                         btnLista.innerText = "Gestionar Alumnos";
                         btnLista.onclick = () => abrirModalLista(perfil.id, perfil.nombre);
                         body.appendChild(btnLista);
+
+                        const btnEliminarClase = document.createElement('button');
+                        btnEliminarClase.className = 'btn-card btn-borrar-alumno';
+                        btnEliminarClase.innerText = "Eliminar Clase";
+                        btnEliminarClase.style.marginTop = '4px';
+                        btnEliminarClase.onclick = () => eliminarClase(perfil.id, perfil.nombre);
+                        body.appendChild(btnEliminarClase);
                     }
 
                     card.appendChild(body);
@@ -416,12 +448,19 @@
             document.getElementById('modal-alumno').style.display = 'flex';
         }
 
+        let aulaIdActual = null;
+
         async function abrirModalLista(idAula, nombreAula) {
+            aulaIdActual = idAula;
             document.getElementById('titulo-modal-lista').innerText = `Gestión: ${nombreAula}`;
             const tbody = document.getElementById('cuerpo-tabla-alumnos');
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Cargando información...</td></tr>';
             document.getElementById('modal-lista').style.display = 'flex';
+            await cargarTablaAlumnos(idAula);
+        }
 
+        async function cargarTablaAlumnos(idAula) {
+            const tbody = document.getElementById('cuerpo-tabla-alumnos');
             try {
                 const res = await fetch(`/api/admin/alumnos-aula/${idAula}`);
                 const alumnos = await res.json();
@@ -433,20 +472,86 @@
                 }
 
                 alumnos.forEach(alumno => {
+                    const emailTexto = alumno.email_tutor 
+                        ? `<small style="color:#10b981; display:block;">✅ ${alumno.email_tutor}</small>`
+                        : `<small style="color:#f59e0b; display:block;">⚠️ Sin email</small>`;
+
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong style="color:#222;">${alumno.nombre}</strong></td>
+                            <td>
+                                <strong style="color:#222;">${alumno.nombre}</strong>
+                                ${emailTexto}
+                            </td>
                             <td><span class="codigo-badge">${alumno.codigo_familia || '—'}</span></td>
                             <td>
-                                <div style="display:flex; gap:8px;">
-                                    <button class="btn-card btn-jugar" style="margin:0; padding:6px 12px;" onclick="window.location.href='/index.html?edad=${alumno.edad}&alumno=${alumno.id}&tipo=alumno'">Jugar</button>
-                                    <button class="btn-card" style="margin:0; padding:6px 12px;" onclick="window.location.href='/padres.html?alumno=${alumno.id}&nombre=${alumno.nombre}&tipo=alumno'">Notas</button>
+                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                                    <button class="btn-card btn-jugar" style="margin:0;" onclick="window.location.href='/index.html?edad=${alumno.edad}&alumno=${alumno.id}&tipo=alumno'">Jugar</button>
+                                    <button class="btn-card" style="margin:0;" onclick="window.location.href='/padres.html?alumno=${alumno.id}&nombre=${encodeURIComponent(alumno.nombre)}&tipo=alumno'">Notas</button>
+                                    <button class="btn-card btn-editar-alumno" style="margin:0;" onclick="abrirEditarAlumno(${alumno.id}, '${alumno.nombre.replace(/'/g, "\\'")}', '${alumno.email_tutor || ''}')">Editar</button>
+                                    <button class="btn-card btn-borrar-alumno" style="margin:0;" onclick="eliminarAlumno(${alumno.id})">Eliminar</button>
                                 </div>
                             </td>
                         </tr>
                     `;
                 });
-            } catch (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error de conexión</td></tr>'; }
+            } catch (error) { 
+                console.error(error); 
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error de conexión</td></tr>'; 
+            }
+        }
+
+        function abrirEditarAlumno(id, nombre, emailTutor) {
+            document.getElementById('edit-alumno-id').value = id;
+            document.getElementById('edit-alumno-aula-id').value = aulaIdActual;
+            document.getElementById('edit-alumno-nombre').value = nombre;
+            document.getElementById('edit-alumno-email').value = emailTutor || '';
+            document.getElementById('modal-editar-alumno').style.display = 'flex';
+        }
+
+        document.getElementById('form-editar-alumno').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-alumno-id').value;
+            const nombre = document.getElementById('edit-alumno-nombre').value;
+            const email_tutor = document.getElementById('edit-alumno-email').value;
+
+            try {
+                const res = await fetch(`/api/admin/editar-alumno/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email_tutor })
+                });
+                if (res.ok) {
+                    cerrarModal('modal-editar-alumno');
+                    await cargarTablaAlumnos(aulaIdActual);
+                } else {
+                    alert('Error al guardar los cambios.');
+                }
+            } catch (error) { alert('Error de conexión.'); }
+        });
+
+        async function eliminarClase(idAula, nombreAula) {
+            if (!confirm(`¿Seguro que quieres eliminar la clase "${nombreAula}"? Se eliminarán todos sus alumnos y su progreso.`)) return;
+            try {
+                const res = await fetch(`/api/admin/eliminar-aula/${idAula}`, { method: 'DELETE' });
+                if (res.ok) {
+                    cargarPerfiles();
+                } else {
+                    const data = await res.json();
+                    alert('Error: ' + data.error);
+                }
+            } catch (e) { alert('Error de conexión.'); }
+        }
+
+        async function eliminarAlumno(id) {
+            if (!confirm('¿Seguro que quieres eliminar este alumno? Se borrarán también sus datos de progreso.')) return;
+            try {
+                const res = await fetch(`/api/admin/eliminar-alumno/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    await cargarTablaAlumnos(aulaIdActual);
+                } else {
+                    alert('Error al eliminar el alumno.');
+                }
+            } catch (error) { alert('Error de conexión.'); }
         }
 
         document.getElementById('form-aula').addEventListener('submit', async (e) => {
@@ -468,7 +573,6 @@
             try {
                 const respuesta = await fetch('/api/admin/nuevo-alumno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosAlumno) });
                 const resultado = await respuesta.json();
-                
                 if (respuesta.ok) { 
                     cerrarModal('modal-alumno'); 
                     document.getElementById('form-alumno').reset(); 
@@ -481,7 +585,6 @@
         document.getElementById('form-vincular').addEventListener('submit', async (e) => {
             e.preventDefault();
             const codigoIntroducido = document.getElementById('codigo_canjeo').value.toUpperCase();
-
             try {
                 const respuesta = await fetch('/api/familia/vincular-alumno', {
                     method: 'POST',
@@ -501,7 +604,6 @@
 
         function cerrarSesion() { localStorage.removeItem('usuarioSiju'); window.location.href = 'login.html'; }
 
-        // --- LÓGICA DEL CHAT IA ---
         const btnAbrirChat = document.getElementById('btn-abrir-chat');
         const btnCerrarChat = document.getElementById('btn-cerrar-chat');
         const ventanaChat = document.getElementById('ventana-chat');
@@ -515,11 +617,7 @@
         function agregarMensaje(texto, remitente) {
             const div = document.createElement('div');
             div.className = `mensaje ${remitente === 'usuario' ? 'msg-usuario' : 'msg-ia'}`;
-            
-            // Reemplaza **texto** por <strong>texto</strong> para formatear en negrita
-            let textoFormateado = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            div.innerHTML = textoFormateado;
+            div.innerHTML = texto.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             chatMensajes.appendChild(div);
             chatMensajes.scrollTop = chatMensajes.scrollHeight;
         }
@@ -537,33 +635,22 @@
             e.preventDefault();
             const mensaje = inputChat.value.trim();
             if (!mensaje) return;
-
             agregarMensaje(mensaje, 'usuario');
             inputChat.value = '';
             mostrarEscribiendo();
-
             try {
-                let rol = usuarioLogueado && usuarioLogueado.rol === 'docente' ? 'docente' : 'familia';
-                let id_usuario = usuarioLogueado ? usuarioLogueado.id : null;
-
                 const respuesta = await fetch('/api/chat-ia', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        mensaje: mensaje, 
-                        rol: rol,
-                        id_usuario: id_usuario
+                        mensaje, 
+                        rol: usuarioLogueado.rol === 'docente' ? 'docente' : 'familia',
+                        id_usuario: usuarioLogueado.id
                     })
                 });
-
                 const datos = await respuesta.json();
                 document.getElementById('indicador-escribiendo').remove();
-
-                if (datos.respuesta) {
-                    agregarMensaje(datos.respuesta, 'ia');
-                } else {
-                    agregarMensaje("Error: La IA no supo qué responder.", 'ia');
-                }
+                agregarMensaje(datos.respuesta || "Error: La IA no supo qué responder.", 'ia');
             } catch (error) {
                 document.getElementById('indicador-escribiendo').remove();
                 agregarMensaje("⚠️ Error de conexión. ¿Está encendido el servidor Python (ia_siju.py)?", 'ia');

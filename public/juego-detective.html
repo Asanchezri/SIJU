@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - El Detective</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -56,7 +59,6 @@
             margin: 0 auto;
         }
 
-        /* --- NUEVO DISEÑO COMPACTO DE TARJETAS --- */
         .tarjeta {
             background: white;
             border: 4px solid #e2e8f0;
@@ -210,8 +212,7 @@
     <div id="vista-juego">
         <p class="instrucciones">¿Qué palabra describe esta imagen?</p>
         
-        <div class="imagen-detective-contenedor" id="contenedor-imagen-pregunta">
-            </div>
+        <div class="imagen-detective-contenedor" id="contenedor-imagen-pregunta"></div>
 
         <div id="contenedor-opciones" class="opciones-contenedor"></div>
         <br><br>
@@ -227,7 +228,6 @@
         const alumnoId = params.get('alumno');
         const tipoJugador = params.get('tipo') || 'alumno'; 
         
-        // Variables del sistema de rondas
         let palabrasPiscina = []; 
         let palabrasPartida = []; 
         let palabrasPendientes = []; 
@@ -250,7 +250,6 @@
                 const response = await fetch(url);
                 const todas = await response.json();
                 
-                // Filtro Todoterreno
                 palabrasPiscina = todas.filter(p => {
                     if (!p.nivel) return nivelActual == 1;
                     const nStr = p.nivel.toString().toLowerCase().trim();
@@ -266,7 +265,6 @@
                     return;
                 }
 
-                // Barajamos la piscina una vez al empezar
                 palabrasPiscina.sort(() => Math.random() - 0.5);
                 iniciarRonda();
 
@@ -292,13 +290,10 @@
         function pintarModoEstudio() {
             const contenedor = document.getElementById('contenedor-tarjetas');
             contenedor.innerHTML = '';
-            // El color del borde en detective es morado
-            const colorBorde = '#e2e8f0'; 
 
             palabrasPartida.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'tarjeta';
-                div.style.borderColor = colorBorde;
                 
                 const urlImg = item.url_imagen || item.ruta_concepto;
                 const urlGif = item.url_video || item.ruta_signo;
@@ -334,7 +329,6 @@
 
             preguntaActual = palabrasPendientes[Math.floor(Math.random() * palabrasPendientes.length)];
 
-            // Para El Detective, mostramos un medio visual al azar (o Concepto o Signo)
             const contImagen = document.getElementById('contenedor-imagen-pregunta');
             let imgHTML = '';
             
@@ -343,7 +337,6 @@
             if (preguntaActual.url_video || preguntaActual.ruta_signo) opcionesMedia.push(preguntaActual.url_video || preguntaActual.ruta_signo);
             
             if (opcionesMedia.length > 0) {
-                // Escoge uno al azar para despistar un poco al detective
                 const medioElegido = opcionesMedia[Math.floor(Math.random() * opcionesMedia.length)];
                 imgHTML = `<img src="${medioElegido}" class="imagen-detective">`;
             } else {
@@ -370,19 +363,24 @@
             });
         }
 
+        function lanzarConfeti() {
+            var duration = 2000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 8, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                confetti({ particleCount: 8, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
         async function verificarRespuesta(elementoHTML, opcionElegida) {
             if(elementoHTML.classList.contains('acierto')) return;
 
             if (opcionElegida.id === preguntaActual.id) {
                 elementoHTML.classList.add('acierto');
                 guardarProgreso(preguntaActual.id);
-                
                 palabrasPendientes = palabrasPendientes.filter(p => p.id !== preguntaActual.id);
-                
-                setTimeout(() => {
-                    generarPregunta();
-                }, 1000);
-
+                setTimeout(() => { generarPregunta(); }, 800);
             } else {
                 elementoHTML.classList.add('fallo');
                 setTimeout(() => elementoHTML.classList.remove('fallo'), 400);
@@ -398,6 +396,7 @@
             const medallaSVG = `<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
             if (quedanMas) {
+                lanzarConfeti();
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -407,6 +406,7 @@
                     </div>
                 `;
             } else {
+                confetti({ particleCount: 150, spread: 180, origin: { y: 0.1 } });
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -419,10 +419,7 @@
             }
         }
 
-        function siguienteRonda() {
-            rondaActual++;
-            iniciarRonda();
-        }
+        function siguienteRonda() { rondaActual++; iniciarRonda(); }
 
         function volverAEstudio() {
             document.getElementById('vista-estudio').style.display = 'block';

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Gestión de Diccionario</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
     <style>
         body { 
             font-family: 'Inter', sans-serif; 
@@ -17,8 +18,11 @@
         .contenedor { max-width: 900px; margin: 0 auto; }
         
         .btn-volver { 
-            display: inline-block; 
-            padding: 10px 18px; 
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            padding: 0 18px; 
             background: white; 
             border: 1px solid #ccd0d5; 
             border-radius: 8px; 
@@ -28,6 +32,7 @@
             margin-bottom: 25px; 
             transition: 0.2s; 
             font-size: 15px;
+            box-sizing: border-box;
         }
         .btn-volver:hover { background: #f0f2f5; color: #111; }
 
@@ -78,8 +83,10 @@
             cursor: pointer; 
             font-weight: 600; 
             transition: background 0.2s; 
+            font-family: inherit;
         }
         .btn-primario:hover { background-color: #004494; }
+        .btn-primario:disabled { background-color: #94a3b8; cursor: not-allowed; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px;}
         th, td { padding: 14px 12px; border-bottom: 1px solid #eaeaea; text-align: left; }
@@ -106,7 +113,6 @@
         .btn-cancelar { width: 100%; background: white; color: #555; border: 1px solid #ccc; margin-top: 10px; padding: 14px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s;}
         .btn-cancelar:hover { background: #f4f6f8; }
         
-        /* Etiqueta visual para el nivel */
         .badge-nivel { background: #eef2f5; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: 600; }
     </style>
 </head>
@@ -164,6 +170,23 @@
                     <tr><td colspan="4" style="text-align:center; padding: 30px; color: #666;">Cargando diccionario...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <div class="caja">
+            <h2>📊 Informe Global con IA</h2>
+            <p style="color:#666; margin-top:0;">Genera un informe pedagógico de tu aula con análisis automático de la IA y el listado de tu vocabulario registrado.</p>
+            <button id="btn-pdf-docente" class="btn-primario" onclick="descargarInformeDocente()">📄 Descargar Informe PDF</button>
+            <button id="btn-email-aula" class="btn-primario" onclick="enviarInformeAula()" style="margin-top:10px; background:#10b981;">📧 Enviar Informe a Todas las Familias</button>
+        </div>
+
+        <div class="caja">
+            <h2>📧 Enviar Informe Individual</h2>
+            <p style="color:#666; margin-top:0;">Selecciona un alumno para enviar su informe de progreso directamente a su familia.</p>
+            <label>Alumno:</label>
+            <select id="select-alumno-email">
+                <option value="">-- Cargando alumnos... --</option>
+            </select>
+            <button id="btn-email-alumno" class="btn-primario" onclick="enviarInformeAlumno()" style="background:#8b5cf6;">📧 Enviar Informe al Tutor</button>
         </div>
     </div>
 
@@ -238,7 +261,6 @@
                 ruta_signo: document.getElementById('ruta_signo').value,
                 id_profesor: usuarioActual.id
             };
-            
             try {
                 await fetch('/api/admin/nueva-palabra', { 
                     method: 'POST', 
@@ -279,7 +301,6 @@
                 ruta_concepto: document.getElementById('edit-concepto').value,
                 ruta_signo: document.getElementById('edit-signo').value
             };
-            
             try {
                 await fetch(`/api/admin/editar-palabra/${id}`, { 
                     method: 'PUT', 
@@ -293,8 +314,260 @@
             }
         });
 
-        // Inicializamos cargando las palabras
+        function mdAHtml(texto) {
+            return texto
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/^\*\s+/gm, '• ')
+                .replace(/\n/g, '<br>');
+        }
+
+        async function descargarInformeDocente() {
+            const btn = document.getElementById('btn-pdf-docente');
+            btn.disabled = true;
+            btn.innerText = '⏳ Generando informe...';
+
+            try {
+                const mensaje = `Genera un informe pedagógico de mi aula. Incluye resumen del progreso, alumnos destacados, palabras más trabajadas y recomendaciones.`;
+                const resIA = await fetch('/api/chat-ia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje, rol: 'docente', id_usuario: usuarioActual.id })
+                });
+                const dataIA = await resIA.json();
+                const analisis = mdAHtml(dataIA.respuesta || 'No hay análisis disponible.');
+
+                const resPalabras = await fetch(`/api/admin/mis-palabras?id_profesor=${usuarioActual.id}`);
+                const palabras = await resPalabras.json();
+
+                const fecha = new Date().toLocaleDateString('es-ES');
+                let tablaPalabras = '<p style="color:#666;">Sin palabras registradas.</p>';
+                if (palabras.length > 0) {
+                    tablaPalabras = `
+                        <table style="width:100%; border-collapse:collapse; margin-top:15px; font-size:14px;">
+                            <tr style="background:#f8f9fa;">
+                                <th style="padding:10px; text-align:left; border-bottom:1px solid #eaeaea;">Palabra</th>
+                                <th style="padding:10px; text-align:left; border-bottom:1px solid #eaeaea;">Edad</th>
+                                <th style="padding:10px; text-align:left; border-bottom:1px solid #eaeaea;">Nivel</th>
+                            </tr>
+                            ${palabras.map(p => `
+                                <tr style="page-break-inside:avoid;">
+                                    <td style="padding:10px; border-bottom:1px solid #eaeaea;"><strong>${p.palabra}</strong></td>
+                                    <td style="padding:10px; border-bottom:1px solid #eaeaea;">${p.edad} años</td>
+                                    <td style="padding:10px; border-bottom:1px solid #eaeaea;">${p.nivel}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    `;
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.style.padding = '20px';
+                wrapper.style.fontFamily = 'Inter, sans-serif';
+                wrapper.innerHTML = `
+                    <div style="text-align:center; margin-bottom:25px; border-bottom:2px solid #0056b3; padding-bottom:15px;">
+                        <h1 style="color:#0056b3; margin:0;">SIJU · Informe Docente</h1>
+                        <p style="color:#666; margin:5px 0 0 0;">${usuarioActual.nombre} · ${fecha}</p>
+                    </div>
+                    <div style="padding:20px; background:#f8f9fa; border-radius:12px; border:1px solid #eaeaea; margin-bottom:25px; page-break-inside:avoid;">
+                        <h2 style="color:#0056b3; margin-top:0;">🤖 Análisis Pedagógico (IA)</h2>
+                        <div style="line-height:1.7; color:#333;">${analisis}</div>
+                    </div>
+                    <div style="padding:20px; background:white; border:1px solid #eaeaea; border-radius:12px;">
+                        <h2 style="color:#0056b3; margin-top:0;">📚 Vocabulario Registrado</h2>
+                        ${tablaPalabras}
+                    </div>
+                `;
+
+                await html2pdf().set({
+                    margin: [15, 10, 15, 10],
+                    filename: `Informe_Docente_${fecha}.pdf`,
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
+                }).from(wrapper).save();
+
+            } catch (e) {
+                alert('Error generando informe: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '📄 Descargar Informe PDF';
+            }
+        }
+
+        async function cargarAlumnosSelect() {
+            try {
+                const perfiles = await fetch(`/api/mis-perfiles?idUsuario=${usuarioActual.id}&rol=docente`);
+                const aulas = await perfiles.json();
+                if (aulas.length === 0) return;
+                const idAula = aulas[0].id;
+                const resAlumnos = await fetch(`/api/admin/alumnos-aula/${idAula}`);
+                const alumnos = await resAlumnos.json();
+                const select = document.getElementById('select-alumno-email');
+                select.innerHTML = '<option value="">-- Selecciona un alumno --</option>';
+                alumnos.forEach(a => {
+                    select.innerHTML += `<option value="${a.id}" data-nombre="${a.nombre}">${a.nombre}</option>`;
+                });
+                select.dataset.idAula = idAula;
+                select.dataset.nombreAula = aulas[0].nombre;
+            } catch (e) { console.error(e); }
+        }
+
+        async function enviarInformeAlumno() {
+            const select = document.getElementById('select-alumno-email');
+            const idAlumno = select.value;
+            const nombreAlumno = select.options[select.selectedIndex]?.dataset?.nombre;
+            if (!idAlumno) { alert('Selecciona un alumno primero.'); return; }
+            const btn = document.getElementById('btn-email-alumno');
+            btn.disabled = true;
+            btn.innerText = '⏳ Generando y enviando...';
+            try {
+                const pdfBase64 = await generarPdfBase64Alumno(idAlumno, nombreAlumno);
+                const res = await fetch('/api/enviar-informe', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pdf_base64: pdfBase64, nombre_alumno: nombreAlumno, id_alumno: idAlumno, nombre_docente: usuarioActual.nombre })
+                });
+                const data = await res.json();
+                if (res.ok) alert('✅ ' + data.mensaje);
+                else alert('❌ ' + data.error);
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '📧 Enviar Informe al Tutor';
+            }
+        }
+
+        async function enviarInformeAula() {
+            const select = document.getElementById('select-alumno-email');
+            const idAula = select.dataset.idAula;
+            const nombreAula = select.dataset.nombreAula;
+            if (!idAula) { alert('No se ha podido obtener el aula.'); return; }
+            const btn = document.getElementById('btn-email-aula');
+            btn.disabled = true;
+            btn.innerText = '⏳ Generando y enviando...';
+            try {
+                const pdfBase64 = await generarPdfBase64Docente();
+                const res = await fetch('/api/enviar-informe-aula', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pdf_base64: pdfBase64, nombre_aula: nombreAula, id_aula: idAula, nombre_docente: usuarioActual.nombre })
+                });
+                const data = await res.json();
+                if (res.ok) alert('✅ ' + data.mensaje);
+                else alert('❌ ' + data.error);
+            } catch (e) {
+                alert('Error: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = '📧 Enviar Informe a Todas las Familias';
+            }
+        }
+
+        async function generarPdfBase64Alumno(idAlumno, nombreAlumno) {
+            const resProgreso = await fetch(`/api/progreso-alumno/${idAlumno}?tipo=alumno`);
+            const datos = await resProgreso.json();
+            const resIA = await fetch('/api/chat-ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mensaje: `Genera un informe pedagógico breve del progreso del alumno ${nombreAlumno}.`, rol: 'docente', id_usuario: usuarioActual.id })
+            });
+            const dataIA = await resIA.json();
+            const analisis = mdAHtml(dataIA.respuesta || 'No hay análisis disponible.');
+            const fecha = new Date().toLocaleDateString('es-ES');
+            const filasTabla = datos.map(fila => {
+                const f = new Date(fila.fecha_ultimo_juego).toLocaleString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+                return `<tr style="page-break-inside:avoid;"><td style="padding:10px;border-bottom:1px solid #eaeaea;"><strong>${fila.palabra}</strong></td><td style="padding:10px;border-bottom:1px solid #eaeaea;">${fila.categoria||'General'}</td><td style="padding:10px;border-bottom:1px solid #eaeaea;">${fila.aciertos} veces</td><td style="padding:10px;border-bottom:1px solid #eaeaea;">${f}</td></tr>`;
+            }).join('');
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'padding:20px;font-family:Inter,sans-serif;';
+            wrapper.innerHTML = `
+                <div style="text-align:center;margin-bottom:25px;border-bottom:2px solid #0056b3;padding-bottom:15px;">
+                    <h1 style="color:#0056b3;margin:0;">SIJU · Informe de Progreso</h1>
+                    <p style="color:#666;margin:5px 0 0 0;">${nombreAlumno} · ${fecha}</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:25px;">
+                    <thead><tr style="background:#f8f9fa;">
+                        <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Vocabulario</th>
+                        <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Categoría</th>
+                        <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Interacciones</th>
+                        <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Última Actividad</th>
+                    </tr></thead>
+                    <tbody>${filasTabla}</tbody>
+                </table>
+                <div style="padding:20px;background:#f8f9fa;border-radius:12px;border:1px solid #eaeaea;page-break-inside:avoid;">
+                    <h2 style="color:#0056b3;margin-top:0;">🤖 Análisis del Asistente IA</h2>
+                    <div style="line-height:1.7;color:#333;">${analisis}</div>
+                </div>`;
+            return new Promise((resolve, reject) => {
+                html2pdf().set({
+                    margin: [15, 10, 15, 10],
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
+                }).from(wrapper).outputPdf('datauristring').then(uri => resolve(uri.split(',')[1])).catch(reject);
+            });
+        }
+
+        async function generarPdfBase64Docente() {
+            const resIA = await fetch('/api/chat-ia', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mensaje: 'Genera un informe pedagógico de mi aula. Incluye resumen del progreso, alumnos destacados, palabras más trabajadas y recomendaciones.', rol: 'docente', id_usuario: usuarioActual.id })
+            });
+            const dataIA = await resIA.json();
+            const analisis = mdAHtml(dataIA.respuesta || 'No hay análisis disponible.');
+            const resPalabras = await fetch(`/api/admin/mis-palabras?id_profesor=${usuarioActual.id}`);
+            const palabras = await resPalabras.json();
+            const fecha = new Date().toLocaleDateString('es-ES');
+            let tablaPalabras = '<p style="color:#666;">Sin palabras registradas.</p>';
+            if (palabras.length > 0) {
+                tablaPalabras = `
+                    <table style="width:100%;border-collapse:collapse;font-size:14px;">
+                        <thead><tr style="background:#f8f9fa;">
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Palabra</th>
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Edad</th>
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #eaeaea;">Nivel</th>
+                        </tr></thead>
+                        <tbody>${palabras.map(p => `
+                            <tr style="page-break-inside:avoid;">
+                                <td style="padding:10px;border-bottom:1px solid #eaeaea;"><strong>${p.palabra}</strong></td>
+                                <td style="padding:10px;border-bottom:1px solid #eaeaea;">${p.edad} años</td>
+                                <td style="padding:10px;border-bottom:1px solid #eaeaea;">${p.nivel}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>`;
+            }
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'padding:20px;font-family:Inter,sans-serif;';
+            wrapper.innerHTML = `
+                <div style="text-align:center;margin-bottom:25px;border-bottom:2px solid #0056b3;padding-bottom:15px;">
+                    <h1 style="color:#0056b3;margin:0;">SIJU · Informe Docente</h1>
+                    <p style="color:#666;margin:5px 0 0 0;">${usuarioActual.nombre} · ${fecha}</p>
+                </div>
+                <div style="padding:20px;background:#f8f9fa;border-radius:12px;border:1px solid #eaeaea;margin-bottom:25px;page-break-inside:avoid;">
+                    <h2 style="color:#0056b3;margin-top:0;">🤖 Análisis Pedagógico (IA)</h2>
+                    <div style="line-height:1.7;color:#333;">${analisis}</div>
+                </div>
+                <div style="padding:20px;background:white;border:1px solid #eaeaea;border-radius:12px;">
+                    <h2 style="color:#0056b3;margin-top:0;">📚 Vocabulario Registrado</h2>
+                    ${tablaPalabras}
+                </div>`;
+            return new Promise((resolve, reject) => {
+                html2pdf().set({
+                    margin: [15, 10, 15, 10],
+                    image: { type: 'jpeg', quality: 0.95 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                    pagebreak: { mode: ['css', 'legacy'] }
+                }).from(wrapper).outputPdf('datauristring').then(uri => resolve(uri.split(',')[1])).catch(reject);
+            });
+        }
+
         cargarMisPalabras();
+        cargarAlumnosSelect();
     </script>
 </body>
 </html>

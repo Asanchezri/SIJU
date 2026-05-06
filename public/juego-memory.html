@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Memory</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -95,9 +98,7 @@
             background-position: center;
         }
 
-        .frontal {
-            transform: rotateY(180deg);
-        }
+        .frontal { transform: rotateY(180deg); }
 
         .frontal img {
             width: 100%;
@@ -153,7 +154,6 @@
         const alumnoId = params.get('alumno');
         const tipoJugador = params.get('tipo') || 'alumno'; 
         
-        // Variables del sistema de rondas
         let palabrasPiscina = []; 
         let palabrasPartida = []; 
         let cartasArray = [];
@@ -162,7 +162,7 @@
         let bloqueado = false;
         let parejasEncontradas = 0;
         let rondaActual = 0;
-        const PAREJAS_POR_RONDA = 4; // 4 parejas = 8 cartas por tablero
+        const PAREJAS_POR_RONDA = 4;
 
         document.getElementById('link-volver').href = `index.html?edad=${edadAlumno}&alumno=${alumnoId}&tipo=${tipoJugador}`;
 
@@ -179,7 +179,6 @@
                 const response = await fetch(url);
                 const todas = await response.json();
                 
-                // Filtro Todoterreno
                 palabrasPiscina = todas.filter(p => {
                     if (!p.nivel) return nivelActual == 1;
                     const nStr = p.nivel.toString().toLowerCase().trim();
@@ -194,7 +193,6 @@
                     return;
                 }
 
-                // Barajamos toda la piscina
                 palabrasPiscina.sort(() => Math.random() - 0.5);
                 iniciarRonda();
 
@@ -202,7 +200,6 @@
         }
 
         function iniciarRonda() {
-            // Reiniciamos variables del tablero
             parejasEncontradas = 0;
             primeraCarta = null;
             segundaCarta = null;
@@ -210,35 +207,18 @@
 
             const inicio = rondaActual * PAREJAS_POR_RONDA;
             let fin = inicio + PAREJAS_POR_RONDA;
-            
-            // Si en la última ronda quedan menos de 4 palabras, cogemos las que queden (mínimo 2)
             if (fin > palabrasPiscina.length) fin = palabrasPiscina.length;
             
             palabrasPartida = palabrasPiscina.slice(inicio, fin);
 
             document.getElementById('titulo-ronda').innerText = `Ronda ${rondaActual + 1}`;
             
-            // --- CREACIÓN DUAL DE CARTAS (CONCEPTO vs SIGNO) ---
             cartasArray = [];
             palabrasPartida.forEach(palabra => {
-                // Carta 1: La imagen (Concepto)
-                cartasArray.push({
-                    id_signo: palabra.id,
-                    tipo: 'concepto',
-                    media: palabra.url_imagen || palabra.ruta_concepto,
-                    texto: palabra.palabra
-                });
-                
-                // Carta 2: El GIF (Signo)
-                cartasArray.push({
-                    id_signo: palabra.id,
-                    tipo: 'signo',
-                    media: palabra.url_video || palabra.ruta_signo,
-                    texto: palabra.palabra
-                });
+                cartasArray.push({ id_signo: palabra.id, tipo: 'concepto', media: palabra.url_imagen || palabra.ruta_concepto, texto: palabra.palabra });
+                cartasArray.push({ id_signo: palabra.id, tipo: 'signo', media: palabra.url_video || palabra.ruta_signo, texto: palabra.palabra });
             });
 
-            // Barajamos las cartas del tablero
             cartasArray.sort(() => 0.5 - Math.random());
 
             pintarTablero();
@@ -251,7 +231,6 @@
             const tablero = document.getElementById('tablero');
             tablero.innerHTML = '';
 
-            // Ajuste automático de columnas si hay menos de 8 cartas (última ronda impar)
             if (cartasArray.length < 8) {
                 tablero.style.gridTemplateColumns = `repeat(${cartasArray.length / 2 + 1}, 1fr)`;
             } else {
@@ -277,19 +256,22 @@
             });
         }
 
+        function lanzarConfeti() {
+            var duration = 2000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 8, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                confetti({ particleCount: 8, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
         function voltearCarta(cartaSeleccionada) {
             if (bloqueado || cartaSeleccionada === primeraCarta || cartaSeleccionada.classList.contains('volteada')) return;
-
             cartaSeleccionada.classList.add('volteada');
-
-            if (!primeraCarta) {
-                primeraCarta = cartaSeleccionada;
-                return;
-            }
-
+            if (!primeraCarta) { primeraCarta = cartaSeleccionada; return; }
             segundaCarta = cartaSeleccionada;
             bloqueado = true;
-
             verificarPareja();
         }
 
@@ -300,11 +282,8 @@
                 primeraCarta.classList.add('acierto');
                 segundaCarta.classList.add('acierto');
                 parejasEncontradas++;
-                
                 guardarProgreso(primeraCarta.dataset.idSigno);
-
                 resetearTurno();
-
                 if (parejasEncontradas === cartasArray.length / 2) {
                     setTimeout(mostrarFinDeRonda, 1000);
                 }
@@ -317,24 +296,20 @@
             }
         }
 
-        function resetearTurno() {
-            primeraCarta = null;
-            segundaCarta = null;
-            bloqueado = false;
-        }
+        function resetearTurno() { primeraCarta = null; segundaCarta = null; bloqueado = false; }
 
         function mostrarFinDeRonda() {
             document.getElementById('vista-juego').style.display = 'none';
             const vistaFin = document.getElementById('vista-fin');
             vistaFin.style.display = 'block';
 
-            // Comprobamos si quedan suficientes palabras en la piscina para otra ronda útil (mínimo 2 palabras)
             const palabrasUsadas = (rondaActual + 1) * PAREJAS_POR_RONDA;
             const quedanMas = (palabrasPiscina.length - palabrasUsadas) >= 2;
             
             const medallaSVG = `<svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
             if (quedanMas) {
+                lanzarConfeti();
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -344,6 +319,7 @@
                     </div>
                 `;
             } else {
+                confetti({ particleCount: 150, spread: 180, origin: { y: 0.1 } });
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -356,10 +332,7 @@
             }
         }
 
-        function siguienteRonda() {
-            rondaActual++;
-            iniciarRonda();
-        }
+        function siguienteRonda() { rondaActual++; iniciarRonda(); }
 
         async function guardarProgreso(idSigno) {
             if (!alumnoId || !tipoJugador) return;

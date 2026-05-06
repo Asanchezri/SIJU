@@ -44,6 +44,73 @@
         
         .btn-nav:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
 
+        /* --- ESTILOS DEL TRADUCTOR LSE --- */
+        .traductor-container {
+            background-color: white;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            max-width: 600px;
+            margin: 20px auto 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 3px dashed #93c5fd;
+        }
+
+        .traductor-container h3 { color: #3b82f6; margin-top: 0; font-size: 1.5em;}
+        
+        .input-grupo {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #texto-traducir {
+            padding: 12px 15px;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            font-size: 16px;
+            width: 60%;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        #texto-traducir:focus { border-color: #3b82f6; }
+
+        .btn-traducir {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-traducir:hover { background-color: #2563eb; }
+
+        .resultado-lse {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            min-height: 85px; 
+        }
+
+        .signo-letra {
+            width: 80px; 
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .espacio-palabra { width: 35px; }
+        /* --------------------------------- */
+
         #mapa-niveles {
             display: flex;
             flex-direction: column;
@@ -92,6 +159,16 @@
         .flecha { width: 30px; height: 30px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748b;}
         
         #caja-debug { display: none; max-width: 600px; margin: 10px auto; background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 12px; border: 1px solid #f87171; text-align: left; font-size: 14px; }
+
+        /* Estilos del pie de página oficial */
+        .site-footer {
+            margin-top: 60px;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .site-footer a { color: #64748b; text-decoration: none; font-weight: bold; }
+        .site-footer a:hover { text-decoration: underline; color: #3b82f6; }
     </style>
 </head>
 <body>
@@ -104,11 +181,30 @@
     <h1>Mapa de Aventuras</h1>
     <h2 id="subtitulo">Avanza por los niveles para descubrir juegos nuevos</h2>
 
+    <!-- TRADUCTOR DACTILOLÓGICO -->
+    <div class="traductor-container">
+        <h3>Traductor Dactilológico 🖐️</h3>
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">¡Escribe tu nombre y mira cómo se signa!</p>
+        
+        <div class="input-grupo">
+            <input type="text" id="texto-traducir" placeholder="Ej: ALFREDO" maxlength="15" autocomplete="off">
+            <button class="btn-traducir" onclick="traducirLSE()">Traducir</button>
+        </div>
+        
+        <div id="resultado-lse" class="resultado-lse"></div>
+    </div>
+
     <div id="caja-debug"></div>
 
     <div id="mapa-niveles">
         <p style="font-weight: 700; color: #64748b;">Cargando mapa...</p>
     </div>
+
+    <!-- PIE DE PÁGINA: CITAS LEGALES -->
+    <footer class="site-footer">
+        <p>Los recursos audiovisuales de LSE utilizados son propiedad de la <a href="https://fundacioncnse-dilse.org/" target="_blank">Fundación CNSE</a>.</p>
+        <p>Iconos de interfaz diseñados por <a href="https://www.flaticon.es/" target="_blank">Freepik en Flaticon</a>.</p>
+    </footer>
 
     <script>
         const usuarioActual = JSON.parse(localStorage.getItem('usuarioSiju'));
@@ -135,6 +231,51 @@
             }
         };
 
+        // --- LÓGICA DEL TRADUCTOR LSE ---
+        function traducirLSE() {
+            const input = document.getElementById('texto-traducir').value;
+            const resultadoDiv = document.getElementById('resultado-lse');
+            
+            // Limpiamos resultados anteriores
+            resultadoDiv.innerHTML = ''; 
+
+            // Normalizamos el texto (quitamos tildes y pasamos a minúsculas)
+            const textoLimpio = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+            // Bucle letra por letra
+            for (let i = 0; i < textoLimpio.length; i++) {
+                let char = textoLimpio[i];
+                
+                if ((char >= 'a' && char <= 'z') || char === 'ñ') {
+                    let img = document.createElement('img');
+                    // Usamos la ruta exacta que se veía en tu captura
+                    img.src = `img/signos/letra_${char}.gif`; 
+                    img.alt = `Letra ${char} en LSE`;
+                    img.className = 'signo-letra';
+                    
+                    // Si falla la carga de una imagen, la ocultamos para no romper el diseño
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                    };
+
+                    resultadoDiv.appendChild(img);
+                } 
+                else if (char === ' ') {
+                    let espacio = document.createElement('div');
+                    espacio.className = 'espacio-palabra';
+                    resultadoDiv.appendChild(espacio);
+                }
+            }
+        }
+
+        // Para que se traduzca al pulsar "Enter" en el teclado
+        document.getElementById('texto-traducir').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                traducirLSE();
+            }
+        });
+        // --------------------------------
+
         async function cargarNiveles(edad) {
             try {
                 const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
@@ -159,7 +300,7 @@
                 };
                 
                 const TOTAL_NIVELES = 3;
-                let contadorNivelVisual = 0; // Este es el número que el niño verá
+                let contadorNivelVisual = 0; 
 
                 for (let nivel = 1; nivel <= TOTAL_NIVELES; nivel++) {
                     
@@ -172,11 +313,10 @@
                         return false;
                     }).length;
                     
-                    // Condición para aparecer: Mínimo 2 palabras si es el Memory (Nivel 3), o 3 palabras para los demás
                     const minimoRequerido = (nivel === 3) ? 2 : 3;
 
                     if (palabrasDelNivel >= minimoRequerido) {
-                        contadorNivelVisual++; // Sumamos 1 al número visual
+                        contadorNivelVisual++; 
                         
                         const enlaceNivel = document.createElement('a');
                         let claseColor = '';
@@ -187,7 +327,6 @@
                         if(nivel === 2) { claseColor = 'nivel-color-2'; nombreModo = 'El Detective'; archivoJuego = 'juego-detective.html'; }
                         if(nivel === 3) { claseColor = 'nivel-color-3'; nombreModo = 'Memory'; archivoJuego = 'juego-memory.html'; }
                         
-                        // Le enviamos a la URL el 'nivel' real de la BD para que cargue los datos correctos
                         enlaceNivel.href = `${archivoJuego}?nivel=${nivel}&edad=${edadAlumno}&alumno=${alumnoIdActual}&tipo=${tipoJugador}`;
                         enlaceNivel.className = `nivel-btn ${claseColor}`;
                         
@@ -208,7 +347,6 @@
                     }
                 }
 
-                // Mensaje elegante por si la edad no tiene NI UNA palabra
                 if (contadorNivelVisual === 0) {
                     contenedor.innerHTML = `
                         <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; border: 2px dashed #cbd5e1; max-width: 400px;">

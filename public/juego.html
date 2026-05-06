@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Jugando</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -194,7 +197,6 @@
         const alumnoId = params.get('alumno');
         const tipoJugador = params.get('tipo') || 'alumno'; 
         
-        // Variables del sistema de rondas
         let palabrasPiscina = []; 
         let palabrasPartida = []; 
         let palabrasPendientes = []; 
@@ -232,7 +234,6 @@
                     return;
                 }
 
-                // Barajamos toda la piscina de palabras una sola vez al cargar
                 palabrasPiscina.sort(() => Math.random() - 0.5);
                 iniciarRonda();
 
@@ -243,14 +244,12 @@
             const inicio = rondaActual * PALABRAS_POR_RONDA;
             const fin = inicio + PALABRAS_POR_RONDA;
             
-            // Extraemos las 3 palabras que tocan en esta ronda
             palabrasPartida = palabrasPiscina.slice(inicio, fin);
 
             document.getElementById('titulo-nivel').innerText = `Nivel ${nivelActual} - Ronda ${rondaActual + 1}`;
             
             pintarModoEstudio(); 
             
-            // Reiniciamos las vistas
             document.getElementById('vista-estudio').style.display = 'block';
             document.getElementById('vista-juego').style.display = 'none';
             document.getElementById('vista-fin').style.display = 'none';
@@ -327,19 +326,24 @@
             });
         }
 
+        function lanzarConfeti() {
+            var duration = 2000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 8, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                confetti({ particleCount: 8, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#eab308'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
         async function verificarRespuesta(elementoHTML, opcionElegida) {
             if(elementoHTML.classList.contains('acierto')) return;
 
             if (opcionElegida.id === preguntaActual.id) {
                 elementoHTML.classList.add('acierto');
                 guardarProgreso(preguntaActual.id);
-                
                 palabrasPendientes = palabrasPendientes.filter(p => p.id !== preguntaActual.id);
-                
-                setTimeout(() => {
-                    generarPregunta();
-                }, 1000);
-
+                setTimeout(() => { generarPregunta(); }, 800);
             } else {
                 elementoHTML.classList.add('fallo');
                 setTimeout(() => elementoHTML.classList.remove('fallo'), 400);
@@ -351,11 +355,11 @@
             const vistaFin = document.getElementById('vista-fin');
             vistaFin.style.display = 'block';
 
-            // Comprobamos si quedan más palabras en la piscina para otra ronda
             const quedanMas = (rondaActual + 1) * PALABRAS_POR_RONDA < palabrasPiscina.length;
             const medallaSVG = `<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:20px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>`;
 
             if (quedanMas) {
+                lanzarConfeti();
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -365,6 +369,7 @@
                     </div>
                 `;
             } else {
+                confetti({ particleCount: 150, spread: 180, origin: { y: 0.1 } });
                 vistaFin.innerHTML = `
                     <div class="pantalla-fin">
                         ${medallaSVG}
@@ -376,10 +381,7 @@
             }
         }
 
-        function siguienteRonda() {
-            rondaActual++;
-            iniciarRonda();
-        }
+        function siguienteRonda() { rondaActual++; iniciarRonda(); }
 
         function volverAEstudio() {
             document.getElementById('vista-estudio').style.display = 'block';
