@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Panel Principal</title>
+    <link rel="icon" type="image/svg+xml" href="/img/Logo_SIJU.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -14,7 +15,6 @@
             padding-top: 80px;
             margin: 0;
         }
-        
         .top-bar {
             position: absolute;
             top: 0; left: 0; width: 100%;
@@ -26,11 +26,17 @@
             background: white;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-
+        .top-bar-izq {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logo-topbar {
+            height: 36px;
+            width: auto;
+        }
         h1 { margin-bottom: 40px; font-size: 2em; color: #111; font-weight: 700; letter-spacing: -0.5px;}
-        
         .contenedor-perfiles { display: flex; justify-content: center; gap: 25px; flex-wrap: wrap; max-width: 1000px; margin: 0 auto; }
-        
         .card-perfil { 
             background: white; 
             border-radius: 12px; 
@@ -40,7 +46,6 @@
             overflow: hidden;
             text-align: left;
         }
-
         .card-header {
             padding: 20px;
             border-bottom: 1px solid #f0f0f0;
@@ -51,7 +56,6 @@
             transition: background 0.2s;
         }
         .card-header:hover { background: #f9fbfd; }
-
         .icono-avatar {
             width: 48px; height: 48px;
             background: #eef2f5;
@@ -59,11 +63,8 @@
             display: flex; align-items: center; justify-content: center;
             color: #0056b3;
         }
-
         .nombre { font-size: 18px; font-weight: 600; color: #222; }
-
         .card-body { padding: 15px; display: flex; flex-direction: column; gap: 8px; }
-
         .btn-card { 
             width: 100%; 
             padding: 10px; 
@@ -79,18 +80,14 @@
             color: #444;
         }
         .btn-card:hover { background: #e9ecef; }
-        
         .btn-jugar { border-color: #0056b3; color: #0056b3; background: white;}
         .btn-jugar:hover { background: #0056b3; color: white;}
-
         .btn-borrar-alumno { background: white; color: #d32f2f; border-color: #ffcdd2; padding: 6px 10px; font-size: 13px;}
         .btn-borrar-alumno:hover { background: #ffebee; }
         .btn-editar-alumno { background: #f0f2f5; color: #333; border-color: #ddd; padding: 6px 10px; font-size: 13px;}
         .btn-editar-alumno:hover { background: #e4e6e9; }
-        
         .btn-nav-rojo { background: white; color: #d32f2f; border: 1px solid #ffcdd2; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s;}
         .btn-nav-rojo:hover { background: #ffebee; }
-
         .btn-gestionar-palabras {
             background-color: #0056b3;
             color: white;
@@ -105,14 +102,12 @@
         }
         .btn-gestionar-palabras:hover { background-color: #004494; }
         .btn-gestionar-palabras:active { transform: translateY(2px); box-shadow: none; }
-
         .caja-canjeo { background: white; padding: 25px; border-radius: 12px; border: 1px solid #ddd; max-width: 400px; margin: 40px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.03);}
         .caja-canjeo h2 { margin-top:0; font-size: 18px; color:#222;}
         .caja-canjeo p { font-size: 14px; color:#666;}
         .caja-canjeo input { width: 100%; padding: 12px; margin: 15px 0; border-radius: 6px; border: 1px solid #ccc; text-align: center; font-size: 1.1em; text-transform: uppercase; letter-spacing: 2px; box-sizing: border-box; background: #f9f9f9;}
         .caja-canjeo button { width: 100%; padding: 12px; background: #0056b3; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;}
         .caja-canjeo button:hover { background: #004494; }
-
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-contenido { background: white; color: #333; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; text-align: left; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
         .modal-contenido h2 { margin-top: 0; color: #111; font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 10px;}
@@ -121,12 +116,10 @@
         .modal-contenido button { width: 100%; padding: 12px; margin-top: 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; font-size: 15px; }
         .btn-accion-modal { background: #0056b3; color: white; }
         .btn-cancelar { background: white; color: #666; border: 1px solid #ccc; margin-top: 10px !important;}
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; text-align: left; font-size: 14px;}
         th, td { padding: 12px; border-bottom: 1px solid #eee; }
         th { background-color: #f8f9fa; color: #555; font-weight: 600;}
         .codigo-badge { background: #f0f0f0; color: #333; padding: 4px 8px; border-radius: 4px; font-family: monospace; font-size: 1em; letter-spacing: 1px; border: 1px solid #ddd;}
-
         .chat-fab {
             position: fixed; bottom: 25px; right: 25px;
             background: linear-gradient(135deg, #8b5cf6, #6d28d9);
@@ -138,7 +131,6 @@
             transition: transform 0.2s, box-shadow 0.2s; z-index: 1000;
         }
         .chat-fab:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(109, 40, 217, 0.4); }
-
         .chat-widget {
             position: fixed; bottom: 90px; right: 25px;
             width: 360px; height: 550px; background: white;
@@ -149,7 +141,6 @@
             transform-origin: bottom right; text-align: left;
         }
         .chat-widget.oculto { opacity: 0; pointer-events: none; transform: scale(0.8); }
-
         .chat-header {
             background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 20px;
             display: flex; justify-content: space-between; align-items: center; color: white;
@@ -164,12 +155,10 @@
         .chat-status { font-size: 12px; opacity: 0.8; }
         .btn-cerrar { background: none; border: none; color: white; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
         .btn-cerrar:hover { opacity: 1; }
-
         .chat-body {
             flex: 1; padding: 20px; background-color: #f8fafc;
             display: flex; flex-direction: column; gap: 12px; overflow-y: auto;
         }
-        
         .mensaje {
             max-width: 85%; padding: 12px 16px; font-size: 14px;
             line-height: 1.5; position: relative; text-align: left;
@@ -185,7 +174,6 @@
             background: #8b5cf6; color: white; align-self: flex-end;
             border-radius: 18px 18px 4px 18px; box-shadow: 0 2px 5px rgba(139, 92, 246, 0.2);
         }
-
         .chat-footer {
             padding: 15px; background: white; border-top: 1px solid #e2e8f0;
             display: flex; gap: 10px; align-items: center;
@@ -196,7 +184,6 @@
             outline: none; transition: border 0.2s;
         }
         .chat-footer input:focus { border-color: #8b5cf6; }
-        
         #btn-enviar-chat {
             background: #8b5cf6; border: none; border-radius: 50%;
             width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
@@ -204,20 +191,20 @@
         }
         #btn-enviar-chat:hover { background: #7c3aed; }
         #btn-enviar-chat:active { transform: scale(0.9); }
-
         .escribiendo { display: flex; gap: 4px; align-items: center; height: 10px; padding: 5px; }
         .punto { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: latido 1.4s infinite ease-in-out; }
         .punto:nth-child(1) { animation-delay: -0.32s; }
         .punto:nth-child(2) { animation-delay: -0.16s; }
-
         @keyframes aparecer-msg { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes latido { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
     </style>
 </head>
 <body>
-
     <div class="top-bar">
-        <div id="zona-admin"></div> 
+        <div class="top-bar-izq">
+            <img src="/img/Logo_SIJU.svg" alt="SIJU" class="logo-topbar">
+            <div id="zona-admin"></div>
+        </div>
         <button class="btn-nav-rojo" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
@@ -236,7 +223,6 @@
 
     <div id="lista-perfiles" class="contenedor-perfiles">Cargando datos...</div>
 
-    <!-- MODAL CREAR CLASE -->
     <div id="modal-clase" class="modal">
         <div class="modal-contenido">
             <h2>Crear Clase</h2>
@@ -249,7 +235,6 @@
         </div>
     </div>
 
-    <!-- MODAL MATRICULAR ALUMNO -->
     <div id="modal-alumno" class="modal">
         <div class="modal-contenido">
             <h2 id="titulo-modal-alumno">Registrar Alumno</h2>
@@ -266,7 +251,6 @@
         </div>
     </div>
 
-    <!-- MODAL LISTA ALUMNOS -->
     <div id="modal-lista" class="modal">
         <div class="modal-contenido" style="max-width: 700px;">
             <h2 id="titulo-modal-lista">Listado de Alumnos</h2>
@@ -284,7 +268,6 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR ALUMNO -->
     <div id="modal-editar-alumno" class="modal">
         <div class="modal-contenido">
             <h2>Editar Alumno</h2>
@@ -324,9 +307,7 @@
             </button>
         </div>
         <div class="chat-body" id="chat-mensajes">
-            <div class="mensaje msg-ia">
-                ¡Hola! Soy la Inteligencia Artificial de SIJU. ¿En qué te puedo ayudar hoy?
-            </div>
+            <div class="mensaje msg-ia">¡Hola! Soy la Inteligencia Artificial de SIJU. ¿En qué te puedo ayudar hoy?</div>
         </div>
         <form class="chat-footer" id="form-chat">
             <input type="text" id="input-chat" placeholder="Escribe tu duda aquí..." autocomplete="off" required>
@@ -338,9 +319,8 @@
 
     <script>
         const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
-
         if (!usuarioLogueado) window.location.href = 'login.html';
-        
+
         document.getElementById('titulo-saludo').innerText = `Hola, ${usuarioLogueado.nombre}`;
 
         if (usuarioLogueado.rol === 'familia') {
@@ -360,7 +340,7 @@
                 const respuesta = await fetch(`/api/mis-perfiles?idUsuario=${usuarioLogueado.id}&rol=${usuarioLogueado.rol}`);
                 const perfiles = await respuesta.json();
                 const contenedor = document.getElementById('lista-perfiles');
-                contenedor.innerHTML = ''; 
+                contenedor.innerHTML = '';
 
                 const tipoJugador = (usuarioLogueado.rol === 'docente') ? 'aula' : 'alumno';
 
@@ -374,7 +354,6 @@
 
                 perfiles.forEach(perfil => {
                     const edadPerfil = perfil.edad || perfil.edad_nivel;
-                    
                     const card = document.createElement('div');
                     card.className = 'card-perfil';
 
@@ -430,11 +409,10 @@
                     cardCrear.style.justifyContent = 'center';
                     cardCrear.style.cursor = 'pointer';
                     cardCrear.style.minHeight = '150px';
-                    cardCrear.onclick = () => document.getElementById('modal-clase').style.display = 'flex'; 
+                    cardCrear.onclick = () => document.getElementById('modal-clase').style.display = 'flex';
                     cardCrear.innerHTML = `<span style="color:#888; font-weight:500;">+ Crear Nueva Clase</span>`;
                     contenedor.appendChild(cardCrear);
                 }
-
             } catch (error) { console.error('Error:', error); }
         }
 
@@ -442,8 +420,8 @@
 
         function abrirModalAlumno(idAula, nombreAula, edadAula) {
             document.getElementById('id_aula_destino').value = idAula;
-            document.getElementById('edad_aula_destino').value = edadAula; 
-            document.getElementById('texto-edad-clase').innerText = `${edadAula} Años`; 
+            document.getElementById('edad_aula_destino').value = edadAula;
+            document.getElementById('texto-edad-clase').innerText = `${edadAula} Años`;
             document.getElementById('titulo-modal-alumno').innerText = `Matricular en ${nombreAula}`;
             document.getElementById('modal-alumno').style.display = 'flex';
         }
@@ -464,7 +442,7 @@
             try {
                 const res = await fetch(`/api/admin/alumnos-aula/${idAula}`);
                 const alumnos = await res.json();
-                tbody.innerHTML = ''; 
+                tbody.innerHTML = '';
 
                 if (alumnos.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#666;">No hay alumnos matriculados.</td></tr>';
@@ -494,9 +472,9 @@
                         </tr>
                     `;
                 });
-            } catch (error) { 
-                console.error(error); 
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error de conexión</td></tr>'; 
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error de conexión</td></tr>';
             }
         }
 
@@ -513,7 +491,6 @@
             const id = document.getElementById('edit-alumno-id').value;
             const nombre = document.getElementById('edit-alumno-nombre').value;
             const email_tutor = document.getElementById('edit-alumno-email').value;
-
             try {
                 const res = await fetch(`/api/admin/editar-alumno/${id}`, {
                     method: 'PUT',
@@ -555,7 +532,7 @@
         }
 
         document.getElementById('form-aula').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
+            e.preventDefault();
             const datosAula = { nombre: document.getElementById('nombre_aula').value, edad: document.getElementById('edad_aula').value, id_profesor: usuarioLogueado.id };
             try {
                 const respuesta = await fetch('/api/admin/nueva-aula', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosAula) });
@@ -564,18 +541,18 @@
         });
 
         document.getElementById('form-alumno').addEventListener('submit', async (e) => {
-            e.preventDefault(); 
-            const datosAlumno = { 
-                nombre: document.getElementById('nombre_alumno').value, 
+            e.preventDefault();
+            const datosAlumno = {
+                nombre: document.getElementById('nombre_alumno').value,
                 edad: document.getElementById('edad_aula_destino').value,
-                id_aula: document.getElementById('id_aula_destino').value 
+                id_aula: document.getElementById('id_aula_destino').value
             };
             try {
                 const respuesta = await fetch('/api/admin/nuevo-alumno', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datosAlumno) });
                 const resultado = await respuesta.json();
-                if (respuesta.ok) { 
-                    cerrarModal('modal-alumno'); 
-                    document.getElementById('form-alumno').reset(); 
+                if (respuesta.ok) {
+                    cerrarModal('modal-alumno');
+                    document.getElementById('form-alumno').reset();
                     alert(`Estudiante registrado correctamente.\n\nCódigo de Familia: ${resultado.codigo}`);
                     cargarPerfiles();
                 }
@@ -595,7 +572,7 @@
                 if (respuesta.ok) {
                     alert(resultado.mensaje);
                     document.getElementById('form-vincular').reset();
-                    cargarPerfiles(); 
+                    cargarPerfiles();
                 } else {
                     alert(`Error: ${resultado.error}`);
                 }
@@ -642,8 +619,8 @@
                 const respuesta = await fetch('/api/chat-ia', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        mensaje, 
+                    body: JSON.stringify({
+                        mensaje,
                         rol: usuarioLogueado.rol === 'docente' ? 'docente' : 'familia',
                         id_usuario: usuarioLogueado.id
                     })

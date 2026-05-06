@@ -34,6 +34,14 @@ pool.query(`
 `).catch(() => {});
 
 app.use(express.json({ limit: '10mb' }));
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html') || req.path === '/') {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
 app.use(express.static('public'));
 
 // --- DICCIONARIO ---

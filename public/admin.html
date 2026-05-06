@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Gestión de Diccionario</title>
+    <link rel="icon" type="image/svg+xml" href="/img/Logo_SIJU.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
     <style>
@@ -14,9 +15,7 @@
             padding: 40px 20px; 
             margin: 0;
         }
-        
         .contenedor { max-width: 900px; margin: 0 auto; }
-        
         .btn-volver { 
             display: inline-flex; 
             align-items: center;
@@ -35,7 +34,6 @@
             box-sizing: border-box;
         }
         .btn-volver:hover { background: #f0f2f5; color: #111; }
-
         .caja {
             background: white; 
             padding: 30px; 
@@ -45,7 +43,6 @@
             text-align: left; 
             margin-bottom: 30px; 
         }
-
         h2 { 
             color: #111; 
             margin-top: 0; 
@@ -55,9 +52,7 @@
             padding-bottom: 15px; 
             margin-bottom: 20px;
         }
-        
         label { display: block; margin-top: 15px; font-weight: 500; color: #444; font-size: 14px; margin-bottom: 5px;}
-        
         input, select { 
             width: 100%; 
             padding: 12px; 
@@ -70,7 +65,6 @@
             transition: border-color 0.2s;
         }
         input:focus, select:focus { outline: none; border-color: #0056b3; }
-
         .btn-primario { 
             width: 100%; 
             margin-top: 25px; 
@@ -87,11 +81,9 @@
         }
         .btn-primario:hover { background-color: #004494; }
         .btn-primario:disabled { background-color: #94a3b8; cursor: not-allowed; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px;}
         th, td { padding: 14px 12px; border-bottom: 1px solid #eaeaea; text-align: left; }
         th { background-color: #f8f9fa; color: #555; font-weight: 600;}
-        
         .grupo-botones-tabla { display: flex; gap: 8px; }
         .btn-tabla {
             padding: 8px 12px;
@@ -107,17 +99,14 @@
         .btn-editar:hover { background: #e4e6e9; }
         .btn-borrar { background: white; color: #d32f2f; border-color: #ffcdd2; }
         .btn-borrar:hover { background: #ffebee; }
-
         #modal-editar { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-contenido { background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);}
         .btn-cancelar { width: 100%; background: white; color: #555; border: 1px solid #ccc; margin-top: 10px; padding: 14px; border-radius: 6px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.2s;}
         .btn-cancelar:hover { background: #f4f6f8; }
-        
         .badge-nivel { background: #eef2f5; color: #0056b3; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: 600; }
     </style>
 </head>
 <body>
-
     <script>
         const usuarioActual = JSON.parse(localStorage.getItem('usuarioSiju'));
         if (!usuarioActual || usuarioActual.rol !== 'docente') {
@@ -133,24 +122,20 @@
             <h2>Añadir Nueva Palabra</h2>
             <form id="form-palabra">
                 <label>Palabra:</label> <input type="text" id="palabra" placeholder="Ej: Manzana" required>
-                
                 <label>Edad Recomendada:</label> 
                 <select id="edad">
                     <option value="3">3 Años</option>
                     <option value="4">4 Años</option>
                     <option value="5">5 Años</option>
                 </select>
-                
                 <label>Nivel de Dificultad:</label> 
                 <select id="nivel" required>
                     <option value="Básico">Básico</option>
                     <option value="Medio">Medio</option>
                     <option value="Difícil">Difícil</option>
                 </select>
-
                 <label>Ruta/URL de la Imagen:</label> <input type="text" id="ruta_concepto" placeholder="/img/conceptos/ejemplo.png" required>
                 <label>Ruta/URL del Vídeo (GIF):</label> <input type="text" id="ruta_signo" placeholder="/img/signos/ejemplo.gif" required>
-                
                 <button type="submit" class="btn-primario">Guardar Palabra</button>
             </form>
         </div>
@@ -196,24 +181,20 @@
             <form id="form-editar">
                 <input type="hidden" id="edit-id">
                 <label>Palabra:</label> <input type="text" id="edit-palabra" required>
-                
                 <label>Edad Recomendada:</label> 
                 <select id="edit-edad">
                     <option value="3">3 Años</option>
                     <option value="4">4 Años</option>
                     <option value="5">5 Años</option>
                 </select>
-                
                 <label>Nivel de Dificultad:</label> 
                 <select id="edit-nivel" required>
                     <option value="Básico">Básico</option>
                     <option value="Medio">Medio</option>
                     <option value="Difícil">Difícil</option>
                 </select>
-
                 <label>Ruta/URL de la Imagen:</label> <input type="text" id="edit-concepto" required>
                 <label>Ruta/URL del Vídeo (GIF):</label> <input type="text" id="edit-signo" required>
-                
                 <button type="submit" class="btn-primario">Actualizar Datos</button>
                 <button type="button" class="btn-cancelar" onclick="document.getElementById('modal-editar').style.display='none'">Cancelar</button>
             </form>
@@ -325,7 +306,6 @@
             const btn = document.getElementById('btn-pdf-docente');
             btn.disabled = true;
             btn.innerText = '⏳ Generando informe...';
-
             try {
                 const mensaje = `Genera un informe pedagógico de mi aula. Incluye resumen del progreso, alumnos destacados, palabras más trabajadas y recomendaciones.`;
                 const resIA = await fetch('/api/chat-ia', {

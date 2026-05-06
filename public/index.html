@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Mapa de Aventuras</title>
+    <link rel="icon" type="image/svg+xml" href="/img/Logo_SIJU.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         body {
@@ -14,10 +15,8 @@
             padding: 20px;
             color: #1e293b;
         }
-
         h1 { color: #3b82f6; margin-bottom: 5px; font-size: 2.8em; font-weight: 800; letter-spacing: -1px; }
         h2 { color: #64748b; margin-top: 0; font-size: 1.2em; font-weight: 700; }
-        
         .nav-superior {
             display: flex;
             justify-content: space-between;
@@ -27,7 +26,6 @@
             margin-left: auto;
             margin-right: auto;
         }
-
         .btn-nav {
             text-decoration: none;
             font-size: 16px;
@@ -41,10 +39,8 @@
         }
         .volver { background: #94a3b8; box-shadow: 0 6px 0 #64748b; }
         .stats { background: #f59e0b; box-shadow: 0 6px 0 #d97706; }
-        
         .btn-nav:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
 
-        /* --- ESTILOS DEL TRADUCTOR LSE --- */
         .traductor-container {
             background-color: white;
             border-radius: 20px;
@@ -55,16 +51,13 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             border: 3px dashed #93c5fd;
         }
-
         .traductor-container h3 { color: #3b82f6; margin-top: 0; font-size: 1.5em;}
-        
         .input-grupo {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 20px;
         }
-
         #texto-traducir {
             padding: 12px 15px;
             border: 2px solid #cbd5e1;
@@ -76,9 +69,7 @@
             font-weight: bold;
             color: #1e293b;
         }
-
         #texto-traducir:focus { border-color: #3b82f6; }
-
         .btn-traducir {
             background-color: #3b82f6;
             color: white;
@@ -90,9 +81,7 @@
             cursor: pointer;
             transition: background 0.3s;
         }
-
         .btn-traducir:hover { background-color: #2563eb; }
-
         .resultado-lse {
             display: flex;
             flex-wrap: wrap;
@@ -100,16 +89,13 @@
             gap: 5px;
             min-height: 85px; 
         }
-
         .signo-letra {
             width: 80px; 
             height: auto;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .espacio-palabra { width: 35px; }
-        /* --------------------------------- */
 
         #mapa-niveles {
             display: flex;
@@ -120,7 +106,6 @@
             margin: 0 auto;
             padding: 20px;
         }
-
         .nivel-btn {
             background-color: white;
             border: 4px solid transparent;
@@ -138,29 +123,22 @@
             box-sizing: border-box;
             text-decoration: none;
         }
-
         .nivel-color-1 { border-color: #10b981; box-shadow: 0 8px 0 #10b981; }
         .nivel-color-2 { border-color: #8b5cf6; box-shadow: 0 8px 0 #8b5cf6; }
         .nivel-color-3 { border-color: #f59e0b; box-shadow: 0 8px 0 #f59e0b; }
-
         .nivel-btn:hover { transform: translateY(-4px); }
         .nivel-btn:active { transform: translateY(8px); box-shadow: 0 0px 0 transparent !important; }
-
         .icono-nivel { 
             width: 50px; height: 50px; 
             border-radius: 15px; 
             display: flex; align-items: center; justify-content: center;
             background: #f1f5f9;
         }
-        
         .texto-nivel { text-align: left; }
         .titulo-nivel { font-size: 22px; color: #1e293b; margin-bottom: 4px;}
         .subtitulo-nivel { font-size: 15px; font-weight: 600; color: #64748b; }
         .flecha { width: 30px; height: 30px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #64748b;}
-        
         #caja-debug { display: none; max-width: 600px; margin: 10px auto; background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 12px; border: 1px solid #f87171; text-align: left; font-size: 14px; }
-
-        /* Estilos del pie de página oficial */
         .site-footer {
             margin-top: 60px;
             padding: 20px;
@@ -172,7 +150,6 @@
     </style>
 </head>
 <body>
-
     <div class="nav-superior">
         <a href="seleccion.html" class="btn-nav volver">Cambiar Perfil</a>
         <button onclick="irAEstadisticas()" class="btn-nav stats">Mi Progreso</button>
@@ -181,16 +158,13 @@
     <h1>Mapa de Aventuras</h1>
     <h2 id="subtitulo">Avanza por los niveles para descubrir juegos nuevos</h2>
 
-    <!-- TRADUCTOR DACTILOLÓGICO -->
     <div class="traductor-container">
         <h3>Traductor Dactilológico 🖐️</h3>
         <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">¡Escribe tu nombre y mira cómo se signa!</p>
-        
         <div class="input-grupo">
             <input type="text" id="texto-traducir" placeholder="Ej: ALFREDO" maxlength="15" autocomplete="off">
             <button class="btn-traducir" onclick="traducirLSE()">Traducir</button>
         </div>
-        
         <div id="resultado-lse" class="resultado-lse"></div>
     </div>
 
@@ -200,7 +174,6 @@
         <p style="font-weight: 700; color: #64748b;">Cargando mapa...</p>
     </div>
 
-    <!-- PIE DE PÁGINA: CITAS LEGALES -->
     <footer class="site-footer">
         <p>Los recursos audiovisuales de LSE utilizados son propiedad de la <a href="https://fundacioncnse-dilse.org/" target="_blank">Fundación CNSE</a>.</p>
         <p>Iconos de interfaz diseñados por <a href="https://www.flaticon.es/" target="_blank">Freepik en Flaticon</a>.</p>
@@ -208,6 +181,7 @@
 
     <script>
         const usuarioActual = JSON.parse(localStorage.getItem('usuarioSiju'));
+        if (!usuarioActual) window.location.href = 'login.html';
         const parametros = new URLSearchParams(window.location.search);
         const edadGuardia = parametros.get('edad');
         const alumnoGuardia = parametros.get('alumno');
@@ -223,7 +197,6 @@
         window.onload = function() {
             edadAlumno = parametros.get('edad');
             alumnoIdActual = parametros.get('alumno'); 
-
             if (edadAlumno) {
                 cargarNiveles(edadAlumno);
             } else {
@@ -231,36 +204,22 @@
             }
         };
 
-        // --- LÓGICA DEL TRADUCTOR LSE ---
         function traducirLSE() {
             const input = document.getElementById('texto-traducir').value;
             const resultadoDiv = document.getElementById('resultado-lse');
-            
-            // Limpiamos resultados anteriores
-            resultadoDiv.innerHTML = ''; 
-
-            // Normalizamos el texto (quitamos tildes y pasamos a minúsculas)
+            resultadoDiv.innerHTML = '';
             const textoLimpio = input.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-            // Bucle letra por letra
             for (let i = 0; i < textoLimpio.length; i++) {
                 let char = textoLimpio[i];
-                
                 if ((char >= 'a' && char <= 'z') || char === 'ñ') {
                     let img = document.createElement('img');
-                    // Usamos la ruta exacta que se veía en tu captura
                     img.src = `img/signos/letra_${char}.gif`; 
                     img.alt = `Letra ${char} en LSE`;
                     img.className = 'signo-letra';
-                    
-                    // Si falla la carga de una imagen, la ocultamos para no romper el diseño
-                    img.onerror = function() {
-                        this.style.display = 'none';
-                    };
-
+                    img.onerror = function() { this.style.display = 'none'; };
                     resultadoDiv.appendChild(img);
-                } 
-                else if (char === ' ') {
+                } else if (char === ' ') {
                     let espacio = document.createElement('div');
                     espacio.className = 'espacio-palabra';
                     resultadoDiv.appendChild(espacio);
@@ -268,19 +227,14 @@
             }
         }
 
-        // Para que se traduzca al pulsar "Enter" en el teclado
         document.getElementById('texto-traducir').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                traducirLSE();
-            }
+            if (e.key === 'Enter') traducirLSE();
         });
-        // --------------------------------
 
         async function cargarNiveles(edad) {
             try {
                 const usuarioLogueado = JSON.parse(localStorage.getItem('usuarioSiju'));
                 let url = `/diccionario?edad=${edad}`;
-                
                 if (usuarioLogueado && usuarioLogueado.rol === 'docente') {
                     url += `&docente=${usuarioLogueado.id}`;
                 } else if (alumnoIdActual) {
@@ -289,21 +243,19 @@
 
                 const response = await fetch(url);
                 const palabras = await response.json();
-                
                 const contenedor = document.getElementById('mapa-niveles');
-                contenedor.innerHTML = ''; 
+                contenedor.innerHTML = '';
 
                 const iconos = {
                     1: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`,
                     2: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
                     3: `<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`
                 };
-                
+
                 const TOTAL_NIVELES = 3;
-                let contadorNivelVisual = 0; 
+                let contadorNivelVisual = 0;
 
                 for (let nivel = 1; nivel <= TOTAL_NIVELES; nivel++) {
-                    
                     const palabrasDelNivel = palabras.filter(p => {
                         if (!p.nivel) return false;
                         const nStr = p.nivel.toString().toLowerCase().trim();
@@ -312,24 +264,20 @@
                         if (nivel === 3) return nStr === '3' || nStr === 'difícil' || nStr === 'dificil';
                         return false;
                     }).length;
-                    
+
                     const minimoRequerido = (nivel === 3) ? 2 : 3;
 
                     if (palabrasDelNivel >= minimoRequerido) {
-                        contadorNivelVisual++; 
-                        
+                        contadorNivelVisual++;
                         const enlaceNivel = document.createElement('a');
-                        let claseColor = '';
-                        let nombreModo = '';
-                        let archivoJuego = '';
-                        
-                        if(nivel === 1) { claseColor = 'nivel-color-1'; nombreModo = 'Modo Clásico'; archivoJuego = 'juego.html'; }
-                        if(nivel === 2) { claseColor = 'nivel-color-2'; nombreModo = 'El Detective'; archivoJuego = 'juego-detective.html'; }
-                        if(nivel === 3) { claseColor = 'nivel-color-3'; nombreModo = 'Memory'; archivoJuego = 'juego-memory.html'; }
-                        
+                        let claseColor = '', nombreModo = '', archivoJuego = '';
+
+                        if (nivel === 1) { claseColor = 'nivel-color-1'; nombreModo = 'Modo Clásico'; archivoJuego = 'juego.html'; }
+                        if (nivel === 2) { claseColor = 'nivel-color-2'; nombreModo = 'El Detective'; archivoJuego = 'juego-detective.html'; }
+                        if (nivel === 3) { claseColor = 'nivel-color-3'; nombreModo = 'Memory'; archivoJuego = 'juego-memory.html'; }
+
                         enlaceNivel.href = `${archivoJuego}?nivel=${nivel}&edad=${edadAlumno}&alumno=${alumnoIdActual}&tipo=${tipoJugador}`;
                         enlaceNivel.className = `nivel-btn ${claseColor}`;
-                        
                         enlaceNivel.innerHTML = `
                             <div style="display:flex; align-items:center; gap:20px;">
                                 <div class="icono-nivel">${iconos[nivel]}</div>
@@ -342,7 +290,6 @@
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                             </div>
                         `;
-
                         contenedor.appendChild(enlaceNivel);
                     }
                 }
@@ -356,7 +303,6 @@
                         </div>
                     `;
                 }
-
             } catch (error) {
                 console.error(error);
                 document.getElementById('mapa-niveles').innerHTML = '❌ Error cargando el mapa';

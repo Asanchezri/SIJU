@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SIJU - Acceso</title>
+    <link rel="icon" type="image/svg+xml" href="/img/Logo_SIJU.svg">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { 
@@ -27,15 +28,19 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             text-align: center; 
         }
-        
+        .logo-login {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px auto;
+            display: block;
+        }
         h1 { 
             color: #0056b3;
             margin-top: 0; 
-            font-size: 2.2em;
+            font-size: 2em;
             font-weight: 700;
             letter-spacing: -1px;
         }
-        
         .pestanas { display: flex; margin-bottom: 25px; border-bottom: 2px solid #eaeaea; }
         .pestana { flex: 1; padding: 12px; cursor: pointer; font-weight: 500; color: #666; transition: 0.2s; font-size: 0.95em;}
         .pestana.activa { color: #0056b3; border-bottom: 3px solid #0056b3; }
@@ -84,9 +89,9 @@
     </style>
 </head>
 <body>
-
     <div class="caja-login">
-        <h1>🎲 Signa Jugando 🎲</h1>
+        <img src="/img/Logo_SIJU.svg" alt="Logo SIJU" class="logo-login">
+        <h1>Signa Jugando</h1>
         
         <div class="pestanas">
             <div class="pestana activa" id="tab-login" onclick="mostrarFormulario('login')">Acceder</div>
@@ -106,18 +111,15 @@
         <form id="form-registro" style="display: none;">
             <label>Nombre Completo:</label>
             <input type="text" id="reg-nombre" placeholder="Nombre Apellido" required>
-            
             <label>Tipo de Cuenta:</label>
             <select id="reg-rol">
                 <option value="familia">Familiar / Tutor 🧑‍🧒</option>
                 <option value="docente">Docente / Centro 📚</option>
             </select>
-
             <label>Correo Electrónico:</label>
             <input type="email" id="reg-email" required placeholder="tu@email.com">
             <label>Contraseña:</label>
             <input type="password" id="reg-password" required minlength="4">
-            
             <button type="submit">Crear Cuenta</button>
         </form>
     </div>
@@ -148,7 +150,6 @@
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
-
             try {
                 const res = await fetch('/api/login', {
                     method: 'POST',
@@ -156,7 +157,6 @@
                     body: JSON.stringify({ email, password })
                 });
                 const data = await res.json();
-
                 if (data.success) {
                     localStorage.setItem('usuarioSiju', JSON.stringify(data.usuario));
                     window.location.href = 'seleccion.html';
@@ -172,7 +172,6 @@
             const rol = document.getElementById('reg-rol').value;
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
-
             try {
                 const res = await fetch('/api/registro', {
                     method: 'POST',
@@ -180,7 +179,6 @@
                     body: JSON.stringify({ nombre, email, password, rol })
                 });
                 const data = await res.json();
-
                 if (data.success) {
                     localStorage.setItem('usuarioSiju', JSON.stringify(data.usuario));
                     window.location.href = 'seleccion.html';
