@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Parches silenciosos de BD
+// Parches silenciosos de base de datos
 pool.query(`
     ALTER TABLE progreso ADD COLUMN IF NOT EXISTS id_aula INTEGER;
     ALTER TABLE progreso ALTER COLUMN id_alumno DROP NOT NULL;
